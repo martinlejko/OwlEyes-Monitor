@@ -176,7 +176,7 @@ class MonitorService
     {
         try {
             // Start with base data
-            $data = [
+            $baseData = [
                 'project_id' => $monitor->getProjectId(),
                 'label' => $monitor->getLabel(),
                 'periodicity' => $monitor->getPeriodicity(),
@@ -184,31 +184,41 @@ class MonitorService
                 'badge_label' => $monitor->getBadgeLabel()
             ];
             
-            // Add type-specific fields
+            $typeSpecificData = [];
             if ($monitor->getType() === 'ping') {
-                $data['host'] = $monitor->getHost();
-                $data['port'] = $monitor->getPort();
-                $data['url'] = null;
-                $data['check_status'] = false;
-                $data['keywords'] = json_encode([]);
+                $typeSpecificData = [
+                    'host' => $monitor->getHost(),
+                    'port' => $monitor->getPort(),
+                    'url' => null,
+                    'keywords' => json_encode([])
+                ];
             } elseif ($monitor->getType() === 'website') {
-                $data['url'] = $monitor->getUrl();
-                $data['check_status'] = $monitor->isCheckStatus();
-                $data['keywords'] = json_encode($monitor->getKeywords());
-                $data['host'] = null;
-                $data['port'] = null;
+                $typeSpecificData = [
+                    'url' => $monitor->getUrl(),
+                    'check_status' => (bool)$monitor->isCheckStatus(),
+                    'keywords' => json_encode($monitor->getKeywords()),
+                    'host' => null,
+                    'port' => null
+                ];
             }
             
+            $data = array_merge($baseData, $typeSpecificData);
+            
+            // Defensive explicit cast for check_status if it exists in the final merged $data for website monitors
+            if ($monitor->getType() === 'website' && array_key_exists('check_status', $data)) {
+                $data['check_status'] = (bool)$data['check_status'];
+            }
+
             $affected = $this->db->update(
                 'monitors',
                 $data,
                 ['id' => $monitor->getId()]
             );
             
-            $this->logger->info('Updated monitor with ID: ' . $monitor->getId());
+            $this->logger->info('Updated monitor with ID: ' . $monitor->getId() . ' with data: ' . json_encode($data));
             return $affected > 0;
         } catch (\Exception $e) {
-            $this->logger->error('Error updating monitor: ' . $e->getMessage());
+            $this->logger->error('Error updating monitor: ' . $e->getMessage() . ' - Data: ' . json_encode($data ?? []));
             throw $e;
         }
     }

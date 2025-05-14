@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:14
+    container_name: owleyes-postgres
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: owleyes
+      POSTGRES_USER: owleyes
+      POSTGRES_PASSWORD: owleyes_password
+    ports:
+      - "5432:5432"
+    networks:
+      - owleyes-network
+      
+  # PHP Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: owleyes-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/var/www
+      - ./backend/logs:/var/www/logs
+    environment:
+      DB_HOST: postgres
+      DB_NAME: owleyes
+      DB_USER: owleyes
+      DB_PASSWORD: owleyes_password
+      APP_DEBUG: 'true'
+      APP_URL: http://localhost:8000
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "8000:80"
+    networks:
+      - owleyes-network
+      
+  # React Frontend
+  frontend:
+    image: node:18
+    container_name: owleyes-frontend
+    working_dir: /app
+    command: bash -c "npm install && npm start"
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:8000/api
+      REACT_APP_GRAPHQL_URL: http://localhost:8000/graphql
+    ports:
+      - "3000:3000"
+    networks:
+      - owleyes-network
+
+# Create a custom network
+networks:
+  owleyes-network:
+    driver: bridge
+
+# Define volumes
+volumes:
+  postgres_data: 

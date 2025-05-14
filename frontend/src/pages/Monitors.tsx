@@ -132,7 +132,7 @@ const MonitorsPage: React.FC = () => {
           <Box>
             <Grid container spacing={3}>
               {monitors.map((monitor) => (
-                <Grid component="div" item xs={12} sm={6} md={4} key={monitor.id.toString()}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={monitor.id.toString()}>
                   <Card sx={{
                     display: 'flex',
                     flexDirection: 'column',

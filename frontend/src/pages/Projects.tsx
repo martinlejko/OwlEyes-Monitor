@@ -117,7 +117,7 @@ const ProjectsPage: React.FC = () => {
           <Box>
             <Grid container spacing={3}>
               {projects.map((project) => (
-                <Grid component="div" item xs={12} sm={6} md={4} key={project.id.toString()}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.id.toString()}>
                   <Card sx={{
                     display: 'flex', 
                     flexDirection: 'column', 

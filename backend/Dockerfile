@@ -24,14 +24,9 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath intl
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy crontab file
-COPY ./docker/cron/crontab /etc/cron.d/crontab
-
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/crontab
-
-# Apply cron job
-RUN crontab /etc/cron.d/crontab
+# Setup cron job - create file directly with echo instead of copying
+RUN echo "* * * * * root cd /var/www && php check_monitors.php >> /var/www/logs/cron.log 2>&1" > /etc/cron.d/owleyes-cron \
+    && chmod 0644 /etc/cron.d/owleyes-cron
 
 # Copy Apache configuration
 COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf

@@ -18,14 +18,21 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   QueryStats as QueryStatsIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { getMonitor, getMonitorStatuses } from '../services/api';
+import { getMonitor, getMonitorStatuses, deleteMonitor } from '../services/api';
 import { Monitor, MonitorStatus, PaginatedResponse } from '../types';
 
 const MonitorDetail: React.FC = () => {
@@ -38,6 +45,9 @@ const MonitorDetail: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalStatusCount, setTotalStatusCount] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,6 +87,56 @@ const MonitorDetail: React.FC = () => {
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleEditClick = () => {
+    if (id) {
+      navigate(`/monitors/${id}/edit`);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteError(null);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setIsDeleting(true);
+      
+      if (id) {
+        console.log('Confirming deletion of monitor ID:', id);
+        
+        const timestamp = new Date().getTime();
+        console.log('Using timestamp for cache busting:', timestamp);
+        
+        await deleteMonitor(parseInt(id));
+        console.log('Delete operation completed successfully');
+        
+        setDeleteDialogOpen(false);
+        
+        // After successful deletion, navigate back to project or dashboard
+        if (monitor?.projectId) {
+          const projectId = monitor.projectId;
+          console.log('Navigating to project page with cache buster:', `/projects/${projectId}?_=${timestamp}`);
+          
+          // Force navigation with cache buster parameter
+          window.location.href = `/projects/${projectId}?_=${timestamp}`;
+        } else {
+          console.log('Navigating to dashboard with cache buster');
+          window.location.href = `/?_=${timestamp}`;
+        }
+      }
+    } catch (error: any) {
+      console.error('Error deleting monitor:', error);
+      setDeleteError(error.response?.data?.error || 'Failed to delete monitor. Please try again later.');
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteError(null);
+    setDeleteDialogOpen(false);
   };
 
   const getStatusColor = (status?: boolean): string => {
@@ -162,14 +222,34 @@ const MonitorDetail: React.FC = () => {
         >
           Back to Project
         </Button>
-        <Button 
-          variant="outlined" 
-          color="primary" 
-          startIcon={<QueryStatsIcon />}
-          onClick={() => navigate(`/monitors/${id}/statistics`)}
-        >
-          View Statistics
-        </Button>
+        <Box>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            startIcon={<QueryStatsIcon />}
+            onClick={() => navigate(`/monitors/${id}/statistics`)}
+            sx={{ mr: 1 }}
+          >
+            View Statistics
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            startIcon={<EditIcon />}
+            onClick={handleEditClick}
+            sx={{ mr: 1 }}
+          >
+            Edit
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="error" 
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteClick}
+          >
+            Delete
+          </Button>
+        </Box>
       </Box>
       
       <Card sx={{ mb: 4 }}>
@@ -286,6 +366,40 @@ const MonitorDetail: React.FC = () => {
           </Box>
         </Paper>
       </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Delete Monitor"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this monitor? This action cannot be undone.
+            All status history for this monitor will also be deleted.
+          </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>Cancel</Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            autoFocus
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -86,13 +86,75 @@ export const createMonitor = async (monitor: Omit<Monitor, 'id'>): Promise<Monit
   return response.data;
 };
 
-export const updateMonitor = async (id: number, monitor: Partial<Monitor>): Promise<Monitor> => {
-  const response: AxiosResponse<Monitor> = await api.put(`/monitors/${id}`, monitor);
-  return response.data;
+export const updateMonitor = async (id: number, data: Partial<Monitor>): Promise<Monitor> => {
+  console.log(`Making PUT request to ${API_URL}/monitors/${id} with data:`, data);
+  
+  // Prepare the payload to handle the backend's requirements
+  // Use Record<string, any> for payload to avoid TypeScript errors with dynamic properties
+  const payload: Record<string, any> = { ...data };
+  
+  // Replace empty strings or undefined values with null for specific fields
+  if (payload.type === 'ping') {
+    if (!payload.port) payload.port = null;
+    // Make sure website fields are null for ping monitors
+    payload.url = null;
+    payload.checkStatus = false;
+    payload.keywords = [];
+  } else if (payload.type === 'website') {
+    if (!payload.expectedStatusCode) payload.expectedStatusCode = 200; // Default status code
+    payload.checkStatus = payload.checkStatus === undefined ? false : Boolean(payload.checkStatus);
+    // Make sure ping fields are null for website monitors
+    payload.host = null;
+    payload.port = null;
+  }
+  
+  console.log('Prepared payload:', payload);
+  
+  try {
+    const response: AxiosResponse<Monitor> = await api.put(`/monitors/${id}`, payload);
+    console.log('Response from server:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error in updateMonitor:', error);
+    throw error;
+  }
 };
 
 export const deleteMonitor = async (id: number): Promise<void> => {
-  await api.delete(`/monitors/${id}`);
+  console.log(`Making DELETE request to ${API_URL}/monitors/${id}`);
+  
+  try {
+    // Add cache-busting parameter and required cache control headers
+    const timestamp = new Date().getTime();
+    const config = {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      params: {
+        _: timestamp  // Cache-busting query parameter
+      }
+    };
+    
+    console.log('Delete request config:', config);
+    
+    const response = await api.delete(`/monitors/${id}`, config);
+    console.log('Delete response status:', response.status);
+    
+    // If we got a successful response, force refresh the data
+    if (response.status === 204) {
+      console.log('Delete successful - clearing cache');
+      
+      // Add a small delay to ensure database operations complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    return;
+  } catch (error) {
+    console.error('Error in deleteMonitor:', error);
+    throw error;
+  }
 };
 
 // Monitor Status API functions

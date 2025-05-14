@@ -250,26 +250,37 @@ class MonitorController
         $id = (int)$args['id'];
         
         try {
+            // Log the deletion attempt for debugging
+            $this->logger->info('Attempting to delete monitor with ID: ' . $id);
+            
             // Check if monitor exists
             $monitor = $this->monitorService->find($id);
             
             if (!$monitor) {
+                $this->logger->warning('Monitor not found for deletion: ' . $id);
                 $response->getBody()->write(json_encode(['error' => 'Monitor not found']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
+            
+            // Store project ID for logging
+            $projectId = $monitor->getProjectId();
             
             // Delete monitor
             $success = $this->monitorService->delete($id);
             
             if (!$success) {
+                $this->logger->error('Failed to delete monitor: ' . $id);
                 $response->getBody()->write(json_encode(['error' => 'Failed to delete monitor']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
             
+            $this->logger->info('Successfully deleted monitor with ID: ' . $id . ' from project: ' . $projectId);
+            
+            // Return 204 No Content on successful deletion
             return $response->withStatus(204);
         } catch (\Exception $e) {
             $this->logger->error('Error deleting monitor: ' . $e->getMessage());
-            $response->getBody()->write(json_encode(['error' => 'Failed to delete monitor']));
+            $response->getBody()->write(json_encode(['error' => 'Failed to delete monitor: ' . $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }

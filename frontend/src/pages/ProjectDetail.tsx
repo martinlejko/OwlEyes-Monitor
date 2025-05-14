@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -23,6 +23,7 @@ import { Project, Monitor } from '../types';
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +38,17 @@ const ProjectDetail: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        // Add cache-busting timestamp to prevent stale data
+        const timestamp = new Date().getTime();
+        console.log('Fetching project data with cache buster:', timestamp);
+        
         // Fetch project details
         const projectData = await getProject(parseInt(id));
         setProject(projectData);
         
-        // Fetch monitors for this project
+        // Fetch monitors for this project with cache control
         const monitorsResponse = await getMonitors(1, 100, parseInt(id));
+        console.log(`Loaded ${monitorsResponse.data.length} monitors for project ${id}`);
         setMonitors(monitorsResponse.data);
         
         setLoading(false);
@@ -54,7 +60,7 @@ const ProjectDetail: React.FC = () => {
     };
     
     fetchData();
-  }, [id]);
+  }, [id, location.search]); // Also refresh when search params change (like ?_=timestamp)
 
   const getStatusColor = (status?: boolean): string => {
     if (status === undefined) return '#9e9e9e'; // Gray for unknown

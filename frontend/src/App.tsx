@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import MonitorDetail from './pages/MonitorDetail';
+import EditMonitor from './pages/EditMonitor';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ const App: React.FC = () => {
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/monitors" element={<div>Monitors Page (To be implemented)</div>} />
               <Route path="/monitors/:id" element={<MonitorDetail />} />
+              <Route path="/monitors/:id/edit" element={<EditMonitor />} />
               <Route path="*" element={<div>404 Not Found</div>} />
             </Routes>
           </Layout>

@@ -4,6 +4,14 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL\DriverManager;
+use Martinlejko\Backend\Services\ProjectService;
+use Martinlejko\Backend\Services\MonitorService;
+use Martinlejko\Backend\Services\MonitorStatusService;
+use Martinlejko\Backend\Services\MonitoringService;
+use Martinlejko\Backend\Controllers\ProjectController;
+use Martinlejko\Backend\Controllers\MonitorController;
+use Martinlejko\Backend\Controllers\GraphQLController;
+use Martinlejko\Backend\Controllers\BadgeController;
 
 // Container Definitions
 $container = $app->getContainer();
@@ -27,4 +35,59 @@ $container->set('db', function (ContainerInterface $c) {
     ];
     
     return DriverManager::getConnection($connectionParams);
+});
+
+// Services
+$container->set(ProjectService::class, function (ContainerInterface $c) {
+    return new ProjectService($c->get('db'), $c->get('logger'));
+});
+
+$container->set(MonitorService::class, function (ContainerInterface $c) {
+    return new MonitorService($c->get('db'), $c->get('logger'));
+});
+
+$container->set(MonitorStatusService::class, function (ContainerInterface $c) {
+    return new MonitorStatusService($c->get('db'), $c->get('logger'));
+});
+
+$container->set(MonitoringService::class, function (ContainerInterface $c) {
+    return new MonitoringService(
+        $c->get(MonitorService::class),
+        $c->get(MonitorStatusService::class),
+        $c->get('logger')
+    );
+});
+
+// Controllers
+$container->set(ProjectController::class, function (ContainerInterface $c) {
+    return new ProjectController(
+        $c->get(ProjectService::class),
+        $c->get('logger')
+    );
+});
+
+$container->set(MonitorController::class, function (ContainerInterface $c) {
+    return new MonitorController(
+        $c->get(MonitorService::class),
+        $c->get(MonitorStatusService::class),
+        $c->get(ProjectService::class),
+        $c->get('logger')
+    );
+});
+
+$container->set(GraphQLController::class, function (ContainerInterface $c) {
+    return new GraphQLController(
+        $c->get(ProjectService::class),
+        $c->get(MonitorService::class),
+        $c->get(MonitorStatusService::class),
+        $c->get('logger')
+    );
+});
+
+$container->set(BadgeController::class, function (ContainerInterface $c) {
+    return new BadgeController(
+        $c->get(MonitorService::class),
+        $c->get(MonitorStatusService::class),
+        $c->get('logger')
+    );
 }); 

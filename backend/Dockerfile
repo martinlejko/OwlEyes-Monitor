@@ -1,43 +1,63 @@
 FROM php:8.1-apache
 
+WORKDIR /var/www
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
-    libpq-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     zip \
     unzip \
+    libpq-dev \
+    libicu-dev \
     cron
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath intl
 
-# Install composer
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy crontab file
+COPY ./docker/cron/crontab /etc/cron.d/crontab
+
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/crontab
+
+# Apply cron job
+RUN crontab /etc/cron.d/crontab
+
+# Copy Apache configuration
+COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable rewrite module
+RUN a2enmod rewrite
 
 # Set working directory
 WORKDIR /var/www
 
 # Copy application files
-COPY . /var/www/
+COPY . /var/www
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
+RUN chmod -R 755 /var/www/logs
 
-# Configure Apache
-COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
-RUN a2enmod rewrite
+# Install dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Setup cron job for monitor checks
-COPY ./docker/cron/crontab /etc/cron.d/monitor-cron
-RUN chmod 0644 /etc/cron.d/monitor-cron \
-    && crontab /etc/cron.d/monitor-cron
+# Install dev dependencies for testing
+RUN composer require --dev phpunit/phpunit:^9.5
 
-# Start Apache and cron
+# Create directory for tests
+RUN mkdir -p /var/www/tests/Unit/Services /var/www/tests/Unit/Controllers /var/www/tests/Integration
+RUN chown -R www-data:www-data /var/www/tests
+
+# Command to run application
 CMD service cron start && apache2-foreground 

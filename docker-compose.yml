@@ -8,7 +8,8 @@ services:
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/database.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/database_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     environment:
       POSTGRES_DB: owleyes
       POSTGRES_USER: owleyes

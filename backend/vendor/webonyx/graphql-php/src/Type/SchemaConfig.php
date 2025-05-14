@@ -1,20 +1,22 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace GraphQL\Type;
 
-use GraphQL\Error\InvariantViolation;
 use GraphQL\Language\AST\SchemaDefinitionNode;
-use GraphQL\Language\AST\SchemaExtensionNode;
+use GraphQL\Language\AST\SchemaTypeExtensionNode;
 use GraphQL\Type\Definition\Directive;
-use GraphQL\Type\Definition\NamedType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use GraphQL\Utils\Utils;
+use function count;
+use function is_callable;
 
 /**
- * Configuration options for schema construction.
- *
- * The options accepted by the **create** method are described
- * in the [schema definition docs](schema-definition.md#configuration-options).
+ * Schema configuration class.
+ * Could be passed directly to schema constructor. List of options accepted by **create** method is
+ * [described in docs](type-system/schema.md#configuration-options).
  *
  * Usage example:
  *
@@ -23,74 +25,51 @@ use GraphQL\Type\Definition\Type;
  *         ->setTypeLoader($myTypeLoader);
  *
  *     $schema = new Schema($config);
- *
- * @see Type, NamedType
- *
- * @phpstan-type MaybeLazyObjectType ObjectType|(callable(): (ObjectType|null))|null
- * @phpstan-type TypeLoader callable(string $typeName): ((Type&NamedType)|null)
- * @phpstan-type Types iterable<Type&NamedType>|(callable(): iterable<Type&NamedType>)|iterable<(callable(): Type&NamedType)>|(callable(): iterable<(callable(): Type&NamedType)>)
- * @phpstan-type SchemaConfigOptions array{
- *   query?: MaybeLazyObjectType,
- *   mutation?: MaybeLazyObjectType,
- *   subscription?: MaybeLazyObjectType,
- *   types?: Types|null,
- *   directives?: array<Directive>|null,
- *   typeLoader?: TypeLoader|null,
- *   assumeValid?: bool|null,
- *   astNode?: SchemaDefinitionNode|null,
- *   extensionASTNodes?: array<SchemaExtensionNode>|null,
- * }
  */
 class SchemaConfig
 {
-    /** @var MaybeLazyObjectType */
+    /** @var ObjectType|null */
     public $query;
 
-    /** @var MaybeLazyObjectType */
+    /** @var ObjectType|null */
     public $mutation;
 
-    /** @var MaybeLazyObjectType */
+    /** @var ObjectType|null */
     public $subscription;
 
-    /**
-     * @var iterable|callable
-     *
-     * @phpstan-var Types
-     */
+    /** @var Type[]|callable */
     public $types = [];
 
-    /** @var array<Directive>|null */
-    public ?array $directives = null;
+    /** @var Directive[]|null */
+    public $directives;
 
-    /**
-     * @var callable|null
-     *
-     * @phpstan-var TypeLoader|null
-     */
+    /** @var callable|null */
     public $typeLoader;
 
-    public bool $assumeValid = false;
+    /** @var SchemaDefinitionNode|null */
+    public $astNode;
 
-    public ?SchemaDefinitionNode $astNode = null;
+    /** @var bool */
+    public $assumeValid = false;
 
-    /** @var array<SchemaExtensionNode> */
-    public array $extensionASTNodes = [];
+    /** @var SchemaTypeExtensionNode[] */
+    public $extensionASTNodes = [];
 
     /**
      * Converts an array of options to instance of SchemaConfig
      * (or just returns empty config when array is not passed).
      *
-     * @phpstan-param SchemaConfigOptions $options
+     * @param mixed[] $options
      *
-     * @throws InvariantViolation
+     * @return SchemaConfig
      *
      * @api
      */
-    public static function create(array $options = []): self
+    public static function create(array $options = [])
     {
         $config = new static();
 
-        if ($options !== []) {
+        if (count($options) > 0) {
             if (isset($options['query'])) {
                 $config->setQuery($options['query']);
             }
@@ -112,15 +91,20 @@ class SchemaConfig
             }
 
             if (isset($options['typeLoader'])) {
+                Utils::invariant(
+                    is_callable($options['typeLoader']),
+                    'Schema type loader must be callable if provided but got: %s',
+                    Utils::printSafe($options['typeLoader'])
+                );
                 $config->setTypeLoader($options['typeLoader']);
-            }
-
-            if (isset($options['assumeValid'])) {
-                $config->setAssumeValid($options['assumeValid']);
             }
 
             if (isset($options['astNode'])) {
                 $config->setAstNode($options['astNode']);
+            }
+
+            if (isset($options['assumeValid'])) {
+                $config->setAssumeValid((bool) $options['assumeValid']);
             }
 
             if (isset($options['extensionASTNodes'])) {
@@ -132,7 +116,25 @@ class SchemaConfig
     }
 
     /**
-     * @return MaybeLazyObjectType
+     * @return SchemaDefinitionNode|null
+     */
+    public function getAstNode()
+    {
+        return $this->astNode;
+    }
+
+    /**
+     * @return SchemaConfig
+     */
+    public function setAstNode(SchemaDefinitionNode $astNode)
+    {
+        $this->astNode = $astNode;
+
+        return $this;
+    }
+
+    /**
+     * @return ObjectType|null
      *
      * @api
      */
@@ -142,22 +144,21 @@ class SchemaConfig
     }
 
     /**
-     * @param MaybeLazyObjectType $query
+     * @param ObjectType|null $query
      *
-     * @throws InvariantViolation
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setQuery($query): self
+    public function setQuery($query)
     {
-        $this->assertMaybeLazyObjectType($query);
         $this->query = $query;
 
         return $this;
     }
 
     /**
-     * @return MaybeLazyObjectType
+     * @return ObjectType|null
      *
      * @api
      */
@@ -167,22 +168,21 @@ class SchemaConfig
     }
 
     /**
-     * @param MaybeLazyObjectType $mutation
+     * @param ObjectType|null $mutation
      *
-     * @throws InvariantViolation
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setMutation($mutation): self
+    public function setMutation($mutation)
     {
-        $this->assertMaybeLazyObjectType($mutation);
         $this->mutation = $mutation;
 
         return $this;
     }
 
     /**
-     * @return MaybeLazyObjectType
+     * @return ObjectType|null
      *
      * @api
      */
@@ -192,24 +192,21 @@ class SchemaConfig
     }
 
     /**
-     * @param MaybeLazyObjectType $subscription
+     * @param ObjectType|null $subscription
      *
-     * @throws InvariantViolation
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setSubscription($subscription): self
+    public function setSubscription($subscription)
     {
-        $this->assertMaybeLazyObjectType($subscription);
         $this->subscription = $subscription;
 
         return $this;
     }
 
     /**
-     * @return array|callable
-     *
-     * @phpstan-return Types
+     * @return Type[]|callable
      *
      * @api
      */
@@ -219,13 +216,13 @@ class SchemaConfig
     }
 
     /**
-     * @param array|callable $types
+     * @param Type[]|callable $types
      *
-     * @phpstan-param Types $types
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setTypes($types): self
+    public function setTypes($types)
     {
         $this->types = $types;
 
@@ -233,21 +230,23 @@ class SchemaConfig
     }
 
     /**
-     * @return array<Directive>|null
+     * @return Directive[]|null
      *
      * @api
      */
-    public function getDirectives(): ?array
+    public function getDirectives()
     {
         return $this->directives;
     }
 
     /**
-     * @param array<Directive>|null $directives
+     * @param Directive[] $directives
+     *
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setDirectives(?array $directives): self
+    public function setDirectives(array $directives)
     {
         $this->directives = $directives;
 
@@ -255,82 +254,60 @@ class SchemaConfig
     }
 
     /**
-     * @return callable|null $typeLoader
-     *
-     * @phpstan-return TypeLoader|null $typeLoader
+     * @return callable|null
      *
      * @api
      */
-    public function getTypeLoader(): ?callable
+    public function getTypeLoader()
     {
         return $this->typeLoader;
     }
 
     /**
-     * @phpstan-param TypeLoader|null $typeLoader
+     * @return SchemaConfig
      *
      * @api
      */
-    public function setTypeLoader(?callable $typeLoader): self
+    public function setTypeLoader(callable $typeLoader)
     {
         $this->typeLoader = $typeLoader;
 
         return $this;
     }
 
-    public function getAssumeValid(): bool
+    /**
+     * @return bool
+     */
+    public function getAssumeValid()
     {
         return $this->assumeValid;
     }
 
-    public function setAssumeValid(bool $assumeValid): self
+    /**
+     * @param bool $assumeValid
+     *
+     * @return SchemaConfig
+     */
+    public function setAssumeValid($assumeValid)
     {
         $this->assumeValid = $assumeValid;
 
         return $this;
     }
 
-    public function getAstNode(): ?SchemaDefinitionNode
-    {
-        return $this->astNode;
-    }
-
-    public function setAstNode(?SchemaDefinitionNode $astNode): self
-    {
-        $this->astNode = $astNode;
-
-        return $this;
-    }
-
-    /** @return array<SchemaExtensionNode> */
-    public function getExtensionASTNodes(): array
+    /**
+     * @return SchemaTypeExtensionNode[]
+     */
+    public function getExtensionASTNodes()
     {
         return $this->extensionASTNodes;
     }
 
-    /** @param array<SchemaExtensionNode> $extensionASTNodes */
-    public function setExtensionASTNodes(array $extensionASTNodes): self
+    /**
+     * @param SchemaTypeExtensionNode[] $extensionASTNodes
+     */
+    public function setExtensionASTNodes(array $extensionASTNodes)
     {
         $this->extensionASTNodes = $extensionASTNodes;
-
-        return $this;
-    }
-
-    /**
-     * @param mixed $maybeLazyObjectType Should be MaybeLazyObjectType
-     *
-     * @throws InvariantViolation
-     */
-    protected function assertMaybeLazyObjectType($maybeLazyObjectType): void
-    {
-        if ($maybeLazyObjectType instanceof ObjectType || is_callable($maybeLazyObjectType) || is_null($maybeLazyObjectType)) {
-            return;
-        }
-
-        $notMaybeLazyObjectType = is_object($maybeLazyObjectType)
-            ? get_class($maybeLazyObjectType)
-            : gettype($maybeLazyObjectType);
-        $objectTypeClass = ObjectType::class;
-        throw new InvariantViolation("Expected instanceof {$objectTypeClass}, a callable that returns such an instance, or null, got: {$notMaybeLazyObjectType}.");
     }
 }

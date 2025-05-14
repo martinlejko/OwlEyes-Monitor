@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Simple">
+            <file>./tests/SimpleTest.php</file>
+        </testsuite>
+        <testsuite name="Api">
+            <file>./tests/ApiTest.php</file>
+        </testsuite>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory suffix="Test.php">./tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_HOST" value="postgres"/>
+        <env name="DB_NAME" value="owleyes"/>
+        <env name="DB_USER" value="owleyes"/>
+        <env name="DB_PASSWORD" value="owleyes_password"/>
+    </php>
+</phpunit> 

@@ -13,60 +13,103 @@ OwlEyes is a comprehensive monitoring solution that helps you track the status o
 
 ## Technology Stack
 
-- **Backend**: PHP 8.1 with Slim Framework 4
-- **Frontend**: React with TypeScript, Material UI
+- **Backend**: PHP 8.1 with Slim Framework
+- **Frontend**: React with TypeScript and Material UI
 - **Database**: PostgreSQL
-- **API**: REST API and GraphQL
+- **Infrastructure**: Docker and Docker Compose
 
-## Installation
+## Getting Started
 
-### Requirements
+### Prerequisites
 
 - Docker and Docker Compose
 - Git
 
-### Setup Instructions
+### Installation
 
-1. Clone the repository:
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/owleyes.git
+   cd owleyes
+   ```
 
-```bash
-git clone https://github.com/yourusername/owleyes.git
-cd owleyes
-```
+2. Copy environment files
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
 
-2. Start the application using Docker Compose:
+3. Start the application
+   ```bash
+   docker-compose up -d
+   ```
 
-```bash
-docker-compose up -d
-```
-
-3. Access the application:
+4. Access the application
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000/api
    - GraphQL: http://localhost:8000/graphql
 
-## Project Structure
+## Development
 
-```
-OwlEyes/
-├── backend/              # PHP Slim API backend
-│   ├── public/           # Public files and entry point
-│   ├── src/              # Source code
-│   │   ├── controllers/  # API controllers
-│   │   ├── middleware/   # Middleware components
-│   │   ├── models/       # Data models
-│   │   └── services/     # Business logic and services
-│   ├── logs/             # Application logs
-│   └── check_monitors.php # CLI script for monitoring
-├── frontend/             # React frontend application
-│   ├── public/           # Static files
-│   └── src/              # React components and logic
-└── docker-compose.yml    # Docker configuration
+### Backend
+
+The backend is built with PHP 8.1 using the Slim Framework. It provides a RESTful API and GraphQL interface for interacting with the application.
+
+```bash
+# Enter the backend container
+docker exec -it owleyes-backend bash
+
+# Run composer commands
+composer install
 ```
 
-## API Endpoints
+### Frontend
 
-### RESTful API
+The frontend is built with React, TypeScript, and Material UI. It provides a user-friendly interface for managing projects and monitors.
+
+```bash
+# Install dependencies
+cd frontend
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Database
+
+The database is PostgreSQL and is automatically initialized with the schema and sample data when the container starts.
+
+## Testing
+
+### Backend Tests
+
+The application includes a comprehensive test suite for the backend:
+
+```bash
+# Enter the backend container
+docker exec -it owleyes-backend bash
+
+# Run all tests
+composer test
+
+# Run only unit tests
+composer test:unit
+
+# Run only integration tests
+composer test:integration
+```
+
+Test types:
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test API endpoints and component interactions
+
+For more details, see [backend/tests/README.md](backend/tests/README.md).
+
+## API Documentation
+
+### REST API
+
+The REST API provides endpoints for managing projects, monitors, and accessing monitor statuses.
 
 - `GET /api/projects` - List all projects
 - `GET /api/projects/{id}` - Get a specific project
@@ -78,54 +121,29 @@ OwlEyes/
 - `POST /api/monitors` - Create a new monitor
 - `PUT /api/monitors/{id}` - Update a monitor
 - `DELETE /api/monitors/{id}` - Delete a monitor
-- `GET /api/monitors/{id}/status` - Get monitor status history
+- `GET /api/monitors/{id}/status` - Get status history for a monitor
+- `GET /badge/{id}` - Get a status badge for a monitor
 
 ### GraphQL
 
-Available at `/graphql` with the following schema:
+The GraphQL API provides a flexible query interface for accessing projects, monitors, and statuses.
 
+Example query:
 ```graphql
-type Query {
-  projects: [Project!]!
-  status(monitorIdentifier: String!, from: Int, to: Int): [Status!]
+{
+  projects {
+    identifier
+    label
+    description
+    monitors {
+      identifier
+      label
+      type
+    }
+  }
 }
-
-type Project {
-  identifier: ID!
-  label: ID!
-  description: ID!
-  monitors: [Monitor!]
-}
-
-type Monitor {
-  identifier: ID!
-  periodicity: Int
-  label: ID!
-  type: String!
-  host: String
-  url: String
-  badgeUrl: String!
-}
-
-type Status {
-  date: String!
-  ok: Boolean!
-  responseTime: Int
-}
-```
-
-## Monitoring
-
-Monitors are checked periodically using a cron job that runs every minute. The check frequency for each monitor is determined by its `periodicity` setting (between 5 and 300 seconds).
-
-## Badges
-
-You can embed status badges for your monitors using the following URL:
-
-```
-http://localhost:8000/badge/{monitorId}
 ```
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License - see the LICENSE file for details. 

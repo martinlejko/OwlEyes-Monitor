@@ -120,16 +120,32 @@ const MonitorDetail: React.FC = () => {
           const projectId = monitor.projectId;
           console.log('Navigating to project page with cache buster:', `/projects/${projectId}?_=${timestamp}`);
           
-          // Force navigation with cache buster parameter
-          window.location.href = `/projects/${projectId}?_=${timestamp}`;
+          // Use React Router navigation instead of direct location change
+          navigate(`/projects/${projectId}?_=${timestamp}`);
         } else {
           console.log('Navigating to dashboard with cache buster');
-          window.location.href = `/?_=${timestamp}`;
+          navigate(`/?_=${timestamp}`);
         }
       }
     } catch (error: any) {
-      console.error('Error deleting monitor:', error);
-      setDeleteError(error.response?.data?.error || 'Failed to delete monitor. Please try again later.');
+      console.error('Detailed error object when deleting monitor:', error);
+      let displayErrorMessage = 'Failed to delete monitor. Please try again later.';
+      if (error.isAxiosError && error.response) {
+        // Server responded with an error status code (4xx or 5xx)
+        if (error.response.data && typeof error.response.data.error === 'string') {
+          displayErrorMessage = error.response.data.error;
+        } else {
+          // Response data is not in the expected format, or no specific error message from backend
+          displayErrorMessage = `Server error: ${error.response.status} ${error.response.statusText || ''}`.trim();
+        }
+      } else if (error.isAxiosError && error.request) {
+        // The request was made but no response was received
+        displayErrorMessage = 'No response from server. Check network connection or server status.';
+      } else {
+        // Something happened in setting up the request that triggered an Error, or a non-Axios error
+        displayErrorMessage = error.message || 'An unexpected error occurred.';
+      }
+      setDeleteError(displayErrorMessage);
       setIsDeleting(false);
     }
   };

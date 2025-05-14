@@ -13,6 +13,7 @@ const EditMonitor = lazy(() => import('./pages/EditMonitor'));
 const ProjectsPage = lazy(() => import('./pages/Projects'));
 const MonitorsPage = lazy(() => import('./pages/Monitors'));
 const CreateProject = lazy(() => import('./pages/CreateProject'));
+const CreateMonitor = lazy(() => import('./pages/CreateMonitor'));
 
 // Placeholder for new/detail pages that are not yet implemented
 const NotImplemented: React.FC<{ title: string }> = ({ title }) => (
@@ -92,7 +93,7 @@ const App: React.FC = () => {
 
                 {/* Monitor Routes */}
                 <Route path="/monitors" element={<MonitorsPage />} />
-                <Route path="/monitors/new" element={<NotImplemented title="Create New Monitor" />} />
+                <Route path="/monitors/new" element={<CreateMonitor />} />
                 <Route path="/monitors/:id" element={<MonitorDetail />} />
                 <Route path="/monitors/:id/edit" element={<EditMonitor />} />
                 

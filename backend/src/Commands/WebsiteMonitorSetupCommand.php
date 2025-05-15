@@ -49,7 +49,7 @@ class WebsiteMonitorSetupCommand
             $this->addTestMonitor(
                 'YouTube Check',
                 'https://www.youtube.com',
-                60,
+                60, // 1 minute interval
                 ['YouTube'],
                 true
             );
@@ -57,7 +57,7 @@ class WebsiteMonitorSetupCommand
             $this->addTestMonitor(
                 'Google Check',
                 'https://www.google.com',
-                120,
+                120, // 2 minute interval
                 ['Google'],
                 true
             );
@@ -161,7 +161,9 @@ class WebsiteMonitorSetupCommand
                 
                 $this->logger->info("Testing monitor: {$monitor->getLabel()} (ID: {$monitor->getId()})");
                 $this->logger->info("URL: " . $monitor->getUrl());
+                $this->logger->info("Periodicity: " . $monitor->getPeriodicity() . " seconds");
                 
+                // Perform a one-time check regardless of periodicity for initial validation
                 $status = $this->monitoringService->checkMonitor($monitor->getId());
                 
                 if ($status) {
@@ -184,13 +186,10 @@ class WebsiteMonitorSetupCommand
     private function setupCronJob(): void
     {
         try {
-            // Run the monitor check script every 10 seconds instead of every minute
+            // Run the monitor check script once per minute
+            // The script runs in a loop for ~58 seconds, checking monitors according to their periodicity
+            // This approach allows us to support monitors with sub-minute intervals (as low as 5 seconds)
             $cronContent = '* * * * * root cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1';
-            $cronContent .= "\n* * * * * root sleep 10 && cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1";
-            $cronContent .= "\n* * * * * root sleep 20 && cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1";
-            $cronContent .= "\n* * * * * root sleep 30 && cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1";
-            $cronContent .= "\n* * * * * root sleep 40 && cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1";
-            $cronContent .= "\n* * * * * root sleep 50 && cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1";
             
             $cronFile = '/etc/cron.d/owleyes-cron';
             
@@ -201,7 +200,8 @@ class WebsiteMonitorSetupCommand
                 exec('service cron restart', $output, $returnCode);
                 
                 if ($returnCode === 0) {
-                    $this->logger->info('Cron job updated successfully to run every 10 seconds');
+                    $this->logger->info('Cron job updated successfully to run continuous monitor checks');
+                    $this->logger->info('Monitors will be checked according to their individual periodicity (5-300 seconds)');
                 } else {
                     $this->logger->warning('Cron job file created but could not restart cron service');
                 }

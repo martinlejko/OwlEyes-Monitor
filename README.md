@@ -47,6 +47,7 @@ OwlEyes is a comprehensive monitoring solution that helps you track the status o
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000/api
    - GraphQL: http://localhost:8000/graphql
+   - API Documentation: http://localhost:8000/api-docs
 
 ## Development
 
@@ -124,9 +125,15 @@ The REST API provides endpoints for managing projects, monitors, and accessing m
 - `GET /api/monitors/{id}/status` - Get status history for a monitor
 - `GET /badge/{id}` - Get a status badge for a monitor
 
+You can access the interactive API documentation at:
+- OpenAPI JSON: http://localhost:8000/docs
+- Swagger UI: http://localhost:8000/api-docs
+
 ### GraphQL
 
 The GraphQL API provides a flexible query interface for accessing projects, monitors, and statuses.
+
+Access the GraphQL endpoint at: http://localhost:8000/graphql
 
 Example query:
 ```graphql
@@ -143,6 +150,15 @@ Example query:
   }
 }
 ```
+
+### Status Badge API
+
+You can embed status badges in your README or website using the following URL format:
+```
+http://localhost:8000/badge/{monitorId}
+```
+
+This returns an SVG badge showing the current status of your monitor (up/down).
 
 ## License
 

@@ -7,7 +7,54 @@ use Martinlejko\Backend\Services\ProjectService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Info(
+ *     title="OwlEyes Monitoring API",
+ *     version="1.0.0",
+ *     description="API for the OwlEyes monitoring service",
+ *     @OA\Contact(email="info@owleyes.com")
+ * )
+ * @OA\Server(
+ *     url="/api",
+ *     description="API Server"
+ * )
+ * @OA\Tag(
+ *     name="Projects",
+ *     description="Operations related to Projects"
+ * )
+ * @OA\Tag(
+ *     name="Monitors",
+ *     description="Operations related to Monitors"
+ * )
+ * @OA\Schema(
+ *     schema="Project",
+ *     required={"id", "label"},
+ *     @OA\Property(
+ *         property="id",
+ *         type="integer",
+ *         format="int64",
+ *         description="Project unique ID"
+ *     ),
+ *     @OA\Property(
+ *         property="label",
+ *         type="string",
+ *         description="Project name"
+ *     ),
+ *     @OA\Property(
+ *         property="description",
+ *         type="string",
+ *         description="Project description"
+ *     ),
+ *     @OA\Property(
+ *         property="tags",
+ *         type="array",
+ *         description="List of tags",
+ *         @OA\Items(type="string")
+ *     ),
+ * )
+ */
 class ProjectController
 {
     private ProjectService $projectService;
@@ -19,6 +66,78 @@ class ProjectController
         $this->logger = $logger;
     }
     
+    /**
+     * @OA\Get(
+     *     path="/projects",
+     *     summary="Get all projects with pagination and filtering",
+     *     tags={"Projects"},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="label",
+     *         in="query",
+     *         description="Filter by label",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="tags",
+     *         in="query",
+     *         description="Filter by tags (comma-separated)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sortBy",
+     *         in="query",
+     *         description="Field to sort by",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sortOrder",
+     *         in="query",
+     *         description="Sort direction",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"ASC", "DESC"}, default="ASC")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of projects",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Project")
+     *             ),
+     *             @OA\Property(
+     *                 property="meta",
+     *                 type="object",
+     *                 @OA\Property(property="currentPage", type="integer"),
+     *                 @OA\Property(property="lastPage", type="integer"),
+     *                 @OA\Property(property="perPage", type="integer"),
+     *                 @OA\Property(property="total", type="integer"),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
     public function getAllProjects(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
@@ -58,6 +177,36 @@ class ProjectController
         }
     }
     
+    /**
+     * @OA\Get(
+     *     path="/projects/{id}",
+     *     summary="Get a specific project by ID",
+     *     tags={"Projects"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Project ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Project details",
+     *         @OA\JsonContent(ref="#/components/schemas/Project")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Project not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Project not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
     public function getProject(Request $request, Response $response, array $args): Response
     {
         $id = (int)$args['id'];
@@ -79,6 +228,51 @@ class ProjectController
         }
     }
     
+    /**
+     * @OA\Post(
+     *     path="/projects",
+     *     summary="Create a new project",
+     *     tags={"Projects"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Project data",
+     *         @OA\JsonContent(
+     *             required={"label"},
+     *             @OA\Property(
+     *                 property="label",
+     *                 type="string",
+     *                 description="Project name"
+     *             ),
+     *             @OA\Property(
+     *                 property="description",
+     *                 type="string",
+     *                 description="Project description",
+     *                 example="My project description"
+     *             ),
+     *             @OA\Property(
+     *                 property="tags",
+     *                 type="array",
+     *                 description="List of tags",
+     *                 @OA\Items(type="string"),
+     *                 example={"web", "production"}
+     *             ),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Project created",
+     *         @OA\JsonContent(ref="#/components/schemas/Project")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
     public function createProject(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -108,6 +302,58 @@ class ProjectController
         }
     }
     
+    /**
+     * @OA\Put(
+     *     path="/projects/{id}",
+     *     summary="Update an existing project",
+     *     tags={"Projects"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Project ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         description="Project data to update",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="label",
+     *                 type="string",
+     *                 description="Project name"
+     *             ),
+     *             @OA\Property(
+     *                 property="description",
+     *                 type="string",
+     *                 description="Project description"
+     *             ),
+     *             @OA\Property(
+     *                 property="tags",
+     *                 type="array",
+     *                 description="List of tags",
+     *                 @OA\Items(type="string")
+     *             ),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Project updated",
+     *         @OA\JsonContent(ref="#/components/schemas/Project")
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Project not found"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
     public function updateProject(Request $request, Response $response, array $args): Response
     {
         $id = (int)$args['id'];
@@ -152,6 +398,32 @@ class ProjectController
         }
     }
     
+    /**
+     * @OA\Delete(
+     *     path="/projects/{id}",
+     *     summary="Delete a project",
+     *     tags={"Projects"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Project ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Project deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Project not found"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
     public function deleteProject(Request $request, Response $response, array $args): Response
     {
         $id = (int)$args['id'];

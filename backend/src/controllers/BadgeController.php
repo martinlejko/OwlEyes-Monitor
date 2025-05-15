@@ -53,7 +53,11 @@ class BadgeController
             $badge = $this->generateBadge($label, $value, $color);
             
             $response->getBody()->write($badge);
-            return $response->withHeader('Content-Type', 'image/svg+xml');
+            return $response
+                ->withHeader('Content-Type', 'image/svg+xml')
+                ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->withHeader('Pragma', 'no-cache')
+                ->withHeader('Expires', '0');
         } catch (\Exception $e) {
             $this->logger->error('Error generating badge: ' . $e->getMessage());
             return $this->generateErrorBadge($response, 'Error');
@@ -99,7 +103,11 @@ SVG;
     {
         $badge = $this->generateBadge('error', $errorMessage, 'red');
         $response->getBody()->write($badge);
-        return $response->withHeader('Content-Type', 'image/svg+xml');
+        return $response
+            ->withHeader('Content-Type', 'image/svg+xml')
+            ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->withHeader('Pragma', 'no-cache')
+            ->withHeader('Expires', '0');
     }
     
     private function calculateWidth(string $text): int

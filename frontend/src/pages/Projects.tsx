@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -26,7 +26,8 @@ import {
   Autocomplete,
   FormGroup,
   FormControlLabel,
-  Switch
+  Switch,
+  CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon, SortByAlpha as SortIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import { getProjects, FilterParams } from '../services/api';
@@ -43,10 +44,27 @@ const ProjectsPage: React.FC = () => {
   
   // Filter and sort states
   const [labelFilter, setLabelFilter] = useState('');
+  const [debouncedLabelFilter, setDebouncedLabelFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [filtersVisible, setFiltersVisible] = useState(false);
+
+  // Add a state to track if filtering is in progress
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  // Debounce the label filter to avoid jittery UI
+  useEffect(() => {
+    setIsFiltering(true);
+    const timerId = setTimeout(() => {
+      setDebouncedLabelFilter(labelFilter);
+      setIsFiltering(false);
+    }, 300); // 300ms debounce time
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [labelFilter]);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -54,7 +72,7 @@ const ProjectsPage: React.FC = () => {
     try {
       // Updated API call with filter and sort parameters
       const filterParams: FilterParams = {
-        labelFilter,
+        labelFilter: debouncedLabelFilter,
         tags: selectedTags,
         sortBy: 'label',
         sortDirection
@@ -77,7 +95,7 @@ const ProjectsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, labelFilter, selectedTags, sortDirection, availableTags.length]);
+  }, [page, rowsPerPage, debouncedLabelFilter, selectedTags, sortDirection, availableTags.length]);
 
   useEffect(() => {
     fetchProjects();
@@ -98,8 +116,13 @@ const ProjectsPage: React.FC = () => {
   
   const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLabelFilter(event.target.value);
-    setPage(0); // Reset to first page when changing filters
+    // Don't reset page here, do it when debounced value changes
   };
+
+  // Reset page when debounced filter changes
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedLabelFilter]);
 
   const handleTagsChange = (_event: React.SyntheticEvent, value: string[]) => {
     setSelectedTags(value);
@@ -185,6 +208,11 @@ const ProjectsPage: React.FC = () => {
                   size="small"
                   value={labelFilter}
                   onChange={handleLabelFilterChange}
+                  InputProps={{
+                    endAdornment: isFiltering ? (
+                      <CircularProgress size={20} thickness={5} sx={{ color: 'primary.light' }} />
+                    ) : null
+                  }}
                 />
               </Grid>
               <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 4' } }}>

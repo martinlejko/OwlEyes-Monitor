@@ -26,7 +26,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -37,7 +38,7 @@ import {
   Save as SaveIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
-import { getProject, getMonitors, deleteProject, updateProject } from '../services/api';
+import { getProject, getMonitors, deleteProject, updateProject, deleteMonitor } from '../services/api';
 import { Project, Monitor } from '../types';
 
 const ProjectDetail: React.FC = () => {
@@ -80,6 +81,12 @@ const ProjectDetail: React.FC = () => {
     label: '',
     description: ''
   });
+  
+  // Monitor delete states
+  const [monitorDeleteDialogOpen, setMonitorDeleteDialogOpen] = useState(false);
+  const [monitorToDelete, setMonitorToDelete] = useState<Monitor | null>(null);
+  const [isDeletingMonitor, setIsDeletingMonitor] = useState(false);
+  const [monitorDeleteError, setMonitorDeleteError] = useState<string | null>(null);
   
   // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -327,6 +334,41 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
+  // Handle monitor deletion
+  const handleMonitorDeleteClick = (event: React.MouseEvent, monitor: Monitor) => {
+    event.stopPropagation(); // Prevent navigating to monitor details
+    setMonitorToDelete(monitor);
+    setMonitorDeleteError(null);
+    setMonitorDeleteDialogOpen(true);
+  };
+
+  const handleMonitorDeleteCancel = () => {
+    setMonitorDeleteDialogOpen(false);
+    setMonitorToDelete(null);
+  };
+
+  const handleMonitorDeleteConfirm = async () => {
+    if (!monitorToDelete) return;
+    
+    try {
+      setIsDeletingMonitor(true);
+      setMonitorDeleteError(null);
+      
+      await deleteMonitor(monitorToDelete.id);
+      
+      // Successfully deleted, refresh the monitors list
+      fetchData();
+      
+      setMonitorDeleteDialogOpen(false);
+      setMonitorToDelete(null);
+    } catch (err) {
+      console.error('Error deleting monitor:', err);
+      setMonitorDeleteError('Failed to delete the monitor. Please try again.');
+    } finally {
+      setIsDeletingMonitor(false);
+    }
+  };
+
   if (loading && monitors.length === 0) {
     return (
       <Box>
@@ -539,9 +581,20 @@ const ProjectDetail: React.FC = () => {
                   onClick={() => navigate(`/monitors/${monitor.id}`)}
                 >
                   <CardContent>
-                    <Typography variant="subtitle1" gutterBottom>
-                      {monitor.label}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="subtitle1" gutterBottom sx={{ mb: 0 }}>
+                        {monitor.label}
+                      </Typography>
+                      <Tooltip title="Delete Monitor">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => handleMonitorDeleteClick(e, monitor)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                     <Divider sx={{ my: 1 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Chip 
@@ -703,6 +756,41 @@ const ProjectDetail: React.FC = () => {
             startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Monitor Delete Confirmation Dialog */}
+      <Dialog
+        open={monitorDeleteDialogOpen}
+        onClose={handleMonitorDeleteCancel}
+        aria-labelledby="delete-monitor-dialog-title"
+        aria-describedby="delete-monitor-dialog-description"
+      >
+        <DialogTitle id="delete-monitor-dialog-title">
+          Delete Monitor
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-monitor-dialog-description">
+            Are you sure you want to delete the monitor "{monitorToDelete?.label}"? This action cannot be undone and will also delete all associated status history.
+          </DialogContentText>
+          {monitorDeleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {monitorDeleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleMonitorDeleteCancel} disabled={isDeletingMonitor}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleMonitorDeleteConfirm} 
+            color="error" 
+            disabled={isDeletingMonitor}
+            startIcon={isDeletingMonitor ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {isDeletingMonitor ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

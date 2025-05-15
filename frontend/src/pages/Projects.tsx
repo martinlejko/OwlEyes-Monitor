@@ -27,10 +27,15 @@ import {
   FormGroup,
   FormControlLabel,
   Switch,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
-import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon, SortByAlpha as SortIcon, FilterList as FilterIcon } from '@mui/icons-material';
-import { getProjects, FilterParams } from '../services/api';
+import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon, SortByAlpha as SortIcon, FilterList as FilterIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { getProjects, deleteProject, FilterParams } from '../services/api';
 import { Project } from '../types';
 
 const ProjectsPage: React.FC = () => {
@@ -49,6 +54,12 @@ const ProjectsPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [filtersVisible, setFiltersVisible] = useState(false);
+
+  // Delete dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -155,6 +166,41 @@ const ProjectsPage: React.FC = () => {
     setSelectedTags([]);
     setSortDirection('asc');
     setPage(0);
+  };
+
+  // Handle delete project
+  const handleDeleteClick = (event: React.MouseEvent, project: Project) => {
+    event.stopPropagation(); // Prevent navigating to project details
+    setProjectToDelete(project);
+    setDeleteError(null);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!projectToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      setDeleteError(null);
+      
+      await deleteProject(projectToDelete.id);
+      
+      // Successfully deleted, refresh the list
+      fetchProjects();
+      
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      setDeleteError('Failed to delete the project. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading && projects.length === 0) { // Show main loading only on initial load
@@ -306,9 +352,21 @@ const ProjectsPage: React.FC = () => {
                     borderRadius: '8px'
                   }}>
                     <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                      <Typography variant="h6" component="h2" gutterBottom sx={{ fontWeight: 'medium' }}>
-                        {project.label}
-                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="h6" component="h2" gutterBottom sx={{ fontWeight: 'medium', mb: 0 }}>
+                          {project.label}
+                        </Typography>
+                        <Tooltip title="Delete Project">
+                          <IconButton 
+                            size="small" 
+                            color="error" 
+                            onClick={(e) => handleDeleteClick(e, project)}
+                            sx={{ ml: 1 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                       <Typography 
                         variant="body2" 
                         color="text.secondary" 
@@ -388,6 +446,41 @@ const ProjectsPage: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-project-dialog-title"
+        aria-describedby="delete-project-dialog-description"
+      >
+        <DialogTitle id="delete-project-dialog-title">
+          Delete Project
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-project-dialog-description">
+            Are you sure you want to delete the project "{projectToDelete?.label}"? This action cannot be undone and will also delete all associated monitors.
+          </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

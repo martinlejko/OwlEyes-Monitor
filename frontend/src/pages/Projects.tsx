@@ -50,8 +50,19 @@ const ProjectsPage: React.FC = () => {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [filtersVisible, setFiltersVisible] = useState(false);
 
+  // Add a ref for the search input to maintain focus
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   // Add a state to track if filtering is in progress
   const [isFiltering, setIsFiltering] = useState(false);
+
+  // Maintain focus when filter results change
+  useEffect(() => {
+    // Keep focus in the input field when results change
+    if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [projects, error]);
 
   // Debounce the label filter to avoid jittery UI
   useEffect(() => {
@@ -115,8 +126,9 @@ const ProjectsPage: React.FC = () => {
   };
   
   const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent default behavior that might cause page refreshes
+    event.preventDefault();
     setLabelFilter(event.target.value);
-    // Don't reset page here, do it when debounced value changes
   };
 
   // Reset page when debounced filter changes
@@ -164,7 +176,11 @@ const ProjectsPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
+      <Paper 
+        component="form" 
+        onSubmit={(e) => e.preventDefault()}
+        sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}
+      >
         <Stack 
           direction={{ xs: 'column', sm: 'row' }} 
           justifyContent="space-between" 
@@ -208,6 +224,13 @@ const ProjectsPage: React.FC = () => {
                   size="small"
                   value={labelFilter}
                   onChange={handleLabelFilterChange}
+                  inputRef={searchInputRef}
+                  // Prevent lost focus and prevent form submission
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                    }
+                  }}
                   InputProps={{
                     endAdornment: isFiltering ? (
                       <CircularProgress size={20} thickness={5} sx={{ color: 'primary.light' }} />

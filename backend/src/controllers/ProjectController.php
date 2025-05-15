@@ -32,6 +32,7 @@ class ProjectController
         $tagFilter = null;
         if (isset($queryParams['tags']) && is_string($queryParams['tags'])) {
             $tagFilter = explode(',', $queryParams['tags']);
+            $this->logger->info('Tag filter: ' . json_encode($tagFilter));
         }
         
         try {

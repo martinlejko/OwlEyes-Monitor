@@ -17,21 +17,28 @@ const api = axios.create({
   },
 });
 
+// Define filter params interface
+export interface FilterParams {
+  labelFilter?: string;
+  tags?: string[];
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
 // Project API functions
 export const getProjects = async (
   page: number = 1, 
-  limit: number = 10, 
-  label?: string, 
-  tags?: string[],
-  sortBy?: string,
-  sortOrder?: 'ASC' | 'DESC'
+  limit: number = 10,
+  filterParams?: FilterParams
 ): Promise<PaginatedResponse<Project>> => {
   const params: Record<string, any> = { page, limit };
   
-  if (label) params.label = label;
-  if (tags && tags.length > 0) params.tags = tags.join(',');
-  if (sortBy) params.sortBy = sortBy;
-  if (sortOrder) params.sortOrder = sortOrder;
+  if (filterParams) {
+    if (filterParams.labelFilter) params.label = filterParams.labelFilter;
+    if (filterParams.tags && filterParams.tags.length > 0) params.tags = filterParams.tags.join(',');
+    if (filterParams.sortBy) params.sortBy = filterParams.sortBy;
+    if (filterParams.sortDirection) params.sortOrder = filterParams.sortDirection.toUpperCase();
+  }
   
   const response: AxiosResponse<PaginatedResponse<Project>> = await api.get('/projects', { params });
   return response.data;

@@ -16,10 +16,20 @@ import {
   Stack,
   IconButton,
   Tooltip,
-  Chip
+  Chip,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  Autocomplete,
+  FormGroup,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
-import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon } from '@mui/icons-material';
-import { getProjects } from '../services/api';
+import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon, SortByAlpha as SortIcon, FilterList as FilterIcon } from '@mui/icons-material';
+import { getProjects, FilterParams } from '../services/api';
 import { Project } from '../types';
 
 const ProjectsPage: React.FC = () => {
@@ -30,21 +40,44 @@ const ProjectsPage: React.FC = () => {
   const [page, setPage] = useState(0); // 0-indexed for MUI TablePagination
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalProjects, setTotalProjects] = useState(0);
+  
+  // Filter and sort states
+  const [labelFilter, setLabelFilter] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [filtersVisible, setFiltersVisible] = useState(false);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getProjects(page + 1, rowsPerPage);
+      // Updated API call with filter and sort parameters
+      const filterParams: FilterParams = {
+        labelFilter,
+        tags: selectedTags,
+        sortBy: 'label',
+        sortDirection
+      };
+      
+      const response = await getProjects(page + 1, rowsPerPage, filterParams);
       setProjects(response.data);
       setTotalProjects(response.meta.total);
+      
+      // Extract all unique tags from projects for the filter dropdown
+      if (response.data.length > 0 && availableTags.length === 0) {
+        const allTags = response.data
+          .flatMap(project => project.tags || [])
+          .filter((tag, index, self) => tag && self.indexOf(tag) === index);
+        setAvailableTags(allTags);
+      }
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError('Failed to load projects. Please try again later.');
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, labelFilter, selectedTags, sortDirection, availableTags.length]);
 
   useEffect(() => {
     fetchProjects();
@@ -63,10 +96,31 @@ const ProjectsPage: React.FC = () => {
     navigate(`/projects/${projectId}`);
   };
   
-  // TODO: Add navigation for editing a project if an edit page exists
-  // const handleEditProject = (projectId: number) => {
-  // navigate(`/projects/${projectId}/edit`); 
-  // };
+  const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLabelFilter(event.target.value);
+    setPage(0); // Reset to first page when changing filters
+  };
+
+  const handleTagsChange = (_event: React.SyntheticEvent, value: string[]) => {
+    setSelectedTags(value);
+    setPage(0); // Reset to first page when changing filters
+  };
+
+  const handleSortDirectionChange = () => {
+    setSortDirection(prevDirection => prevDirection === 'asc' ? 'desc' : 'asc');
+    setPage(0);
+  };
+
+  const toggleFilters = () => {
+    setFiltersVisible(!filtersVisible);
+  };
+
+  const clearFilters = () => {
+    setLabelFilter('');
+    setSelectedTags([]);
+    setSortDirection('asc');
+    setPage(0);
+  };
 
   if (loading && projects.length === 0) { // Show main loading only on initial load
     return (
@@ -98,26 +152,96 @@ const ProjectsPage: React.FC = () => {
           <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
             <FolderIcon sx={{ mr: 1.5, fontSize: '2rem' }} color="primary" /> Projects
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/projects/new')} // Placeholder for new project route
-          >
-            Create Project
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<FilterIcon />}
+              onClick={toggleFilters}
+              sx={{ mr: 1 }}
+            >
+              {filtersVisible ? 'Hide Filters' : 'Show Filters'}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/projects/new')}
+            >
+              Create Project
+            </Button>
+          </Stack>
         </Stack>
+
+        {filtersVisible && (
+          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid rgba(0,0,0,0.12)' }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Filter and Sort Options
+            </Typography>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 4' } }}>
+                <TextField
+                  fullWidth
+                  label="Filter by Label"
+                  variant="outlined"
+                  size="small"
+                  value={labelFilter}
+                  onChange={handleLabelFilterChange}
+                />
+              </Grid>
+              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 4' } }}>
+                <Autocomplete
+                  multiple
+                  options={availableTags}
+                  value={selectedTags}
+                  onChange={handleTagsChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Filter by Tags"
+                      size="small"
+                      placeholder="Select tags"
+                    />
+                  )}
+                  size="small"
+                />
+              </Grid>
+              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 2' } }}>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={sortDirection === 'desc'}
+                        onChange={handleSortDirectionChange}
+                      />
+                    }
+                    label={sortDirection === 'asc' ? "Sort A-Z" : "Sort Z-A"}
+                  />
+                </FormGroup>
+              </Grid>
+              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 2' } }}>
+                <Button
+                  variant="outlined"
+                  onClick={clearFilters}
+                  size="small"
+                  fullWidth
+                >
+                  Clear Filters
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
+        )}
 
         {loading && <LinearProgress sx={{ mb: 2 }} />}
 
         {projects.length === 0 && !loading ? (
           <Alert severity="info" sx={{ mt: 2 }}>
-            No projects found. Get started by creating a new project.
+            No projects found. Adjust your filters or create a new project.
           </Alert>
         ) : (
           <Box>
             <Grid container spacing={3}>
               {projects.map((project) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.id.toString()}>
+                <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }} key={project.id.toString()}>
                   <Card sx={{
                     display: 'flex', 
                     flexDirection: 'column', 
@@ -174,15 +298,6 @@ const ProjectsPage: React.FC = () => {
                       )}
                     </CardContent>
                     <CardActions sx={{ justifyContent: 'flex-end', pt: 0, pb: 1.5, px: 2 }}>
-                      {/* <Tooltip title="Edit Project">
-                        <IconButton 
-                          onClick={() => handleEditProject(project.id)} 
-                          size="small"
-                          sx={{ mr: 1 }}
-                        >
-                          <EditIcon fontSize="small"/>
-                        </IconButton>
-                      </Tooltip> */}
                       <Button
                         variant="contained"
                         size="small"

@@ -36,8 +36,22 @@ class ProjectService
             
             // Apply tag filter
             if ($tagFilter && !empty($tagFilter)) {
-                $queryBuilder->andWhere('p.tags @> :tags')
-                    ->setParameter('tags', json_encode($tagFilter), 'json');
+                $orConditions = [];
+                $index = 0;
+                
+                foreach ($tagFilter as $tag) {
+                    $paramName = 'tag_' . $index;
+                    $orConditions[] = "p.tags::text LIKE :" . $paramName;
+                    $queryBuilder->setParameter($paramName, '%' . $tag . '%');
+                    $index++;
+                }
+                
+                $whereClause = '(' . implode(' OR ', $orConditions) . ')';
+                $queryBuilder->andWhere($whereClause);
+                
+                // Log the query being built
+                $this->logger->info('Tag filter query: ' . $whereClause);
+                $this->logger->info('Tag filter values: ' . json_encode($tagFilter));
             }
             
             // Apply sorting
@@ -153,8 +167,21 @@ class ProjectService
             
             // Apply tag filter
             if ($tagFilter && !empty($tagFilter)) {
-                $queryBuilder->andWhere('p.tags @> :tags')
-                    ->setParameter('tags', json_encode($tagFilter), 'json');
+                $orConditions = [];
+                $index = 0;
+                
+                foreach ($tagFilter as $tag) {
+                    $paramName = 'tag_' . $index;
+                    $orConditions[] = "p.tags::text LIKE :" . $paramName;
+                    $queryBuilder->setParameter($paramName, '%' . $tag . '%');
+                    $index++;
+                }
+                
+                $whereClause = '(' . implode(' OR ', $orConditions) . ')';
+                $queryBuilder->andWhere($whereClause);
+                
+                // Log the query being built
+                $this->logger->info('Count tag filter query: ' . $whereClause);
             }
             
             return (int) $queryBuilder->executeQuery()->fetchOne();

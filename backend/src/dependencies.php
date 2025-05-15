@@ -3,6 +3,7 @@
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Doctrine\DBAL\DriverManager;
 use Martinlejko\Backend\Services\ProjectService;
 use Martinlejko\Backend\Services\MonitorService;
@@ -12,6 +13,7 @@ use Martinlejko\Backend\Controllers\ProjectController;
 use Martinlejko\Backend\Controllers\MonitorController;
 use Martinlejko\Backend\Controllers\GraphQLController;
 use Martinlejko\Backend\Controllers\BadgeController;
+use Martinlejko\Backend\Controllers\ApiDocsController;
 
 // Container Definitions
 $container = $app->getContainer();
@@ -22,6 +24,11 @@ $container->set('logger', function (ContainerInterface $c) {
     $logFile = __DIR__ . '/../logs/app.log';
     $logger->pushHandler(new StreamHandler($logFile, Logger::DEBUG));
     return $logger;
+});
+
+// Bind LoggerInterface to logger
+$container->set(LoggerInterface::class, function (ContainerInterface $c) {
+    return $c->get('logger');
 });
 
 // Database Connection
@@ -90,4 +97,8 @@ $container->set(BadgeController::class, function (ContainerInterface $c) {
         $c->get(MonitorStatusService::class),
         $c->get('logger')
     );
+});
+
+$container->set(ApiDocsController::class, function (ContainerInterface $c) {
+    return new ApiDocsController($c->get('logger'));
 }); 

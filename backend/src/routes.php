@@ -33,6 +33,10 @@ $app->post('/graphql', 'Martinlejko\Backend\Controllers\GraphQLController:handle
 // Badge route
 $app->get('/badge/{id}', 'Martinlejko\Backend\Controllers\BadgeController:getBadge');
 
+// API Documentation routes
+$app->get('/api-docs', \Martinlejko\Backend\Controllers\ApiDocsController::class . ':getSwaggerUi');
+$app->get('/api-docs/json', \Martinlejko\Backend\Controllers\ApiDocsController::class . ':getApiDocs');
+
 // Home route - landing page
 $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write(file_get_contents(__DIR__ . '/../public/landing.html'));

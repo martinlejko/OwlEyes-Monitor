@@ -29,8 +29,11 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./backend:/var/www
+      - ./backend/src:/var/www/src
+      - ./backend/public:/var/www/public
+      - ./backend/tests:/var/www/tests
       - ./backend/logs:/var/www/logs
+      - ./backend/.env:/var/www/.env
     environment:
       DB_HOST: postgres
       DB_NAME: owleyes

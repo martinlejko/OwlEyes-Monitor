@@ -6,9 +6,12 @@ use Martinlejko\Backend\Models\Monitor;
 use Martinlejko\Backend\Services\MonitorService;
 use Martinlejko\Backend\Services\MonitorStatusService;
 use Martinlejko\Backend\Services\ProjectService;
+use Martinlejko\Backend\Models\MonitorStatus;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class MonitorController
 {
@@ -285,54 +288,59 @@ class MonitorController
         }
     }
     
+    /**
+     * Get status history for a specific monitor
+     * 
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function getMonitorStatus(Request $request, Response $response, array $args): Response
     {
         $id = (int)$args['id'];
         $queryParams = $request->getQueryParams();
-        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
-        $limit = isset($queryParams['limit']) ? (int)$queryParams['limit'] : 10;
+        $page = (int)($queryParams['page'] ?? 1);
+        $limit = (int)($queryParams['limit'] ?? 10);
         $view = $queryParams['view'] ?? 'list';
         
-        // Handle date filters
+        // Parse date filters
         $fromDate = null;
-        if (isset($queryParams['from'])) {
+        if (!empty($queryParams['from'])) {
             try {
                 $fromDate = new \DateTime($queryParams['from']);
             } catch (\Exception $e) {
-                $response->getBody()->write(json_encode(['error' => 'Invalid from date format']));
-                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+                $this->logger->warning('Invalid from date: ' . $queryParams['from']);
             }
         }
         
         $toDate = null;
-        if (isset($queryParams['to'])) {
+        if (!empty($queryParams['to'])) {
             try {
                 $toDate = new \DateTime($queryParams['to']);
             } catch (\Exception $e) {
-                $response->getBody()->write(json_encode(['error' => 'Invalid to date format']));
-                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+                $this->logger->warning('Invalid to date: ' . $queryParams['to']);
             }
         }
         
-        // Handle status filter
+        // Parse status filter
         $statusFilter = null;
         if (isset($queryParams['status'])) {
             $statusFilter = filter_var($queryParams['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
         
         try {
-            // Check if monitor exists
+            // Validate monitor exists
             $monitor = $this->monitorService->find($id);
-            
             if (!$monitor) {
                 $response->getBody()->write(json_encode(['error' => 'Monitor not found']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
             
-            // Return data based on view type
+            // Handle different view modes
             switch ($view) {
                 case 'calendar':
-                    // Default to last 3 months if date range not specified
+                    // Use 3 months ago as default start date if not specified
                     if (!$fromDate) {
                         $fromDate = new \DateTime();
                         $fromDate->modify('-3 months');
@@ -342,35 +350,42 @@ class MonitorController
                         $toDate = new \DateTime();
                     }
                     
-                    $calendarData = $this->statusService->getDailyStatusSummary($id, $fromDate, $toDate);
-                    $response->getBody()->write(json_encode(['data' => $calendarData]));
+                    $data = $this->statusService->getDailyStatusSummary($id, $fromDate, $toDate);
+                    
+                    $result = [
+                        'data' => $data
+                    ];
                     break;
                     
                 case 'graph':
-                    $graphData = $this->statusService->getResponseTimeData($id, $fromDate, $toDate);
-                    $response->getBody()->write(json_encode(['data' => $graphData]));
+                    $data = $this->statusService->getResponseTimeData($id, $fromDate, $toDate, $limit);
+                    
+                    $result = [
+                        'data' => $data
+                    ];
                     break;
                     
                 case 'list':
                 default:
                     $statuses = $this->statusService->findByMonitor($id, $page, $limit, $fromDate, $toDate, $statusFilter);
-                    $total = $this->statusService->countByMonitor($id, $fromDate, $toDate, $statusFilter);
-                    $lastPage = ceil($total / $limit);
+                    $totalItems = $this->statusService->countByMonitor($id, $fromDate, $toDate, $statusFilter);
+                    $totalPages = ceil($totalItems / $limit);
                     
                     $result = [
-                        'data' => array_map(fn($s) => $s->toArray(), $statuses),
+                        'data' => array_map(function(MonitorStatus $status) {
+                            return $status->toArray();
+                        }, $statuses),
                         'meta' => [
                             'currentPage' => $page,
-                            'lastPage' => $lastPage,
+                            'lastPage' => $totalPages,
                             'perPage' => $limit,
-                            'total' => $total
+                            'total' => $totalItems
                         ]
                     ];
-                    
-                    $response->getBody()->write(json_encode($result));
                     break;
             }
             
+            $response->getBody()->write(json_encode($result));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $this->logger->error('Error getting monitor status: ' . $e->getMessage());

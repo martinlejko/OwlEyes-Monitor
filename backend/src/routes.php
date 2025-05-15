@@ -33,19 +33,6 @@ $app->post('/graphql', 'Martinlejko\Backend\Controllers\GraphQLController:handle
 // Badge route
 $app->get('/badge/{id}', 'Martinlejko\Backend\Controllers\BadgeController:getBadge');
 
-// API Documentation route - OpenAPI/Swagger JSON
-$app->get('/docs', function (Request $request, Response $response) {
-    $openapi = \OpenApi\Generator::scan([__DIR__ . '/controllers']);
-    $response->getBody()->write($openapi->toJson());
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
-// Swagger UI route
-$app->get('/api-docs', function (Request $request, Response $response) {
-    $response->getBody()->write(file_get_contents(__DIR__ . '/../public/swagger.html'));
-    return $response->withHeader('Content-Type', 'text/html');
-});
-
 // Home route - landing page
 $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write(file_get_contents(__DIR__ . '/../public/landing.html'));

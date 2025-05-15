@@ -42,6 +42,7 @@ Thumbs.db
 # PHPUnit
 phpunit.xml
 phpunit.result.cache
+backend/.phpunit.result.cache
 
 # Docker
 docker-compose.override.yml 

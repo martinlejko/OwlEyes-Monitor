@@ -43,6 +43,12 @@ class BadgeController
             $value = $latestStatus && $latestStatus->getStatus() ? 'up' : 'down';
             $color = $latestStatus && $latestStatus->getStatus() ? 'green' : 'red';
             
+            $this->logger->info("Generating badge for monitor ID: {$id}", [
+                'label' => $label,
+                'value' => $value,
+                'color' => $color
+            ]);
+            
             // Generate badge
             $badge = $this->generateBadge($label, $value, $color);
             

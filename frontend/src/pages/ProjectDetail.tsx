@@ -25,16 +25,19 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  IconButton
 } from '@mui/material';
 import {
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
   FilterList as FilterIcon,
   Delete as DeleteIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
-import { getProject, getMonitors, deleteProject } from '../services/api';
+import { getProject, getMonitors, deleteProject, updateProject } from '../services/api';
 import { Project, Monitor } from '../types';
 
 const ProjectDetail: React.FC = () => {
@@ -58,6 +61,25 @@ const ProjectDetail: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  
+  // Edit dialog states
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    label: string;
+    description: string;
+    tags: string[];
+  }>({
+    label: '',
+    description: '',
+    tags: []
+  });
+  const [newTag, setNewTag] = useState('');
+  const [editFormErrors, setEditFormErrors] = useState({
+    label: '',
+    description: ''
+  });
   
   // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -191,6 +213,120 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
+  const handleEditClick = () => {
+    if (project) {
+      setEditFormData({
+        label: project.label,
+        description: project.description,
+        tags: [...project.tags]
+      });
+      setEditError(null);
+      setEditFormErrors({
+        label: '',
+        description: ''
+      });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditDialogOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value
+    });
+    
+    // Clear error when user types
+    if (editFormErrors[name as keyof typeof editFormErrors]) {
+      setEditFormErrors({
+        ...editFormErrors,
+        [name]: ''
+      });
+    }
+  };
+  
+  const handleAddTag = () => {
+    if (newTag.trim() && !editFormData.tags.includes(newTag.trim())) {
+      setEditFormData({
+        ...editFormData,
+        tags: [...editFormData.tags, newTag.trim()]
+      });
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditFormData({
+      ...editFormData,
+      tags: editFormData.tags.filter(tag => tag !== tagToRemove)
+    });
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && newTag.trim()) {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const validateEditForm = (): boolean => {
+    const errors = {
+      label: '',
+      description: ''
+    };
+    
+    let isValid = true;
+    
+    if (!editFormData.label.trim()) {
+      errors.label = 'Project name is required';
+      isValid = false;
+    }
+    
+    if (editFormData.label.length > 100) {
+      errors.label = 'Project name must be less than 100 characters';
+      isValid = false;
+    }
+    
+    if (editFormData.description.length > 500) {
+      errors.description = 'Description must be less than 500 characters';
+      isValid = false;
+    }
+    
+    setEditFormErrors(errors);
+    return isValid;
+  };
+
+  const handleSaveEdit = async () => {
+    if (!validateEditForm() || !id) {
+      return;
+    }
+    
+    setIsSaving(true);
+    setEditError(null);
+    
+    try {
+      await updateProject(parseInt(id), {
+        label: editFormData.label.trim(),
+        description: editFormData.description.trim(),
+        tags: editFormData.tags
+      });
+      
+      setEditDialogOpen(false);
+      
+      // Refresh the data
+      fetchData();
+    } catch (err) {
+      console.error('Error updating project:', err);
+      setEditError('Failed to update project. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading && monitors.length === 0) {
     return (
       <Box>
@@ -246,7 +382,7 @@ const ProjectDetail: React.FC = () => {
             variant="outlined" 
             color="primary" 
             startIcon={<EditIcon />}
-            onClick={() => navigate(`/projects/${id}/edit`)}
+            onClick={handleEditClick}
             sx={{ mr: 1 }}
           >
             Edit Project
@@ -464,6 +600,109 @@ const ProjectDetail: React.FC = () => {
             startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Edit Project Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleEditCancel}
+        aria-labelledby="edit-project-dialog-title"
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle id="edit-project-dialog-title">
+          Edit Project
+        </DialogTitle>
+        <DialogContent>
+          {editError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {editError}
+            </Alert>
+          )}
+          
+          <TextField
+            autoFocus
+            margin="dense"
+            id="label"
+            name="label"
+            label="Project Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editFormData.label}
+            onChange={handleInputChange}
+            error={!!editFormErrors.label}
+            helperText={editFormErrors.label}
+            sx={{ mb: 2 }}
+            required
+          />
+          
+          <TextField
+            margin="dense"
+            id="description"
+            name="description"
+            label="Description"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={editFormData.description}
+            onChange={handleInputChange}
+            error={!!editFormErrors.description}
+            helperText={editFormErrors.description}
+            multiline
+            rows={4}
+            sx={{ mb: 2 }}
+          />
+          
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Tags
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+              {editFormData.tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  onDelete={() => handleRemoveTag(tag)}
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+            </Stack>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <TextField
+                label="Add Tag"
+                variant="outlined"
+                size="small"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyPress={handleKeyPress}
+                sx={{ flexGrow: 1, mr: 1 }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleAddTag}
+                disabled={!newTag.trim()}
+              >
+                Add
+              </Button>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditCancel} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveEdit} 
+            color="primary" 
+            disabled={isSaving}
+            startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogActions>
       </Dialog>

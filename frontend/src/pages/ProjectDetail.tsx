@@ -121,7 +121,7 @@ const ProjectDetail: React.FC = () => {
           variant="contained" 
           color="primary" 
           startIcon={<AddIcon />}
-          onClick={() => navigate(`/projects/${id}/monitors/new`)}
+          onClick={() => navigate(`/monitors/new?projectId=${id}`)}
         >
           Add Monitor
         </Button>
@@ -162,7 +162,7 @@ const ProjectDetail: React.FC = () => {
               color="primary" 
               startIcon={<AddIcon />} 
               sx={{ mt: 2 }}
-              onClick={() => navigate(`/projects/${id}/monitors/new`)}
+              onClick={() => navigate('/monitors/new')}
             >
               Add your first monitor
             </Button>

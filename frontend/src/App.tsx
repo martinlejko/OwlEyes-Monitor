@@ -14,6 +14,7 @@ const ProjectsPage = lazy(() => import('./pages/Projects'));
 const MonitorsPage = lazy(() => import('./pages/Monitors'));
 const CreateProject = lazy(() => import('./pages/CreateProject'));
 const CreateMonitor = lazy(() => import('./pages/CreateMonitor'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 
 // Placeholder for new/detail pages that are not yet implemented
 const NotImplemented: React.FC<{ title: string }> = ({ title }) => (
@@ -84,6 +85,7 @@ const App: React.FC = () => {
             <Layout> {/* Wrap routes with Layout */}
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/about" element={<LandingPage />} />
                 
                 {/* Project Routes */}
                 <Route path="/projects" element={<ProjectsPage />} />

@@ -14,7 +14,8 @@ import {
   Toolbar, 
   Typography,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Button
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -22,7 +23,7 @@ import {
   ViewList as ProjectsIcon,
   MonitorHeart as MonitorsIcon
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,9 +36,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const navigateToLanding = () => {
+    navigate('/about');
   };
 
   const menuItems = [
@@ -49,8 +55,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const drawer = (
     <div>
       <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          🦉 OwlEyes
+        <Typography 
+          variant="h6" 
+          noWrap 
+          component="div"
+          sx={{ 
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+          onClick={navigateToLanding}
+        >
+          <span role="img" aria-label="owl" style={{ marginRight: '8px' }}>🦉</span> OwlEyes
         </Typography>
       </Toolbar>
       <Divider />

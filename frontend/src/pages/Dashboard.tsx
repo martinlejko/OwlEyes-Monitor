@@ -8,7 +8,6 @@ import {
   LinearProgress,
   Paper,
   Stack,
-  Grid
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getProjects, getMonitors } from '../services/api';
@@ -87,8 +86,8 @@ const Dashboard: React.FC = () => {
         <>
           {/* Stats overview */}
           <Box sx={{ mb: 4 }}>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 45%', md: '1 0 22%' } }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -99,8 +98,8 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 45%', md: '1 0 22%' } }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -111,8 +110,8 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 45%', md: '1 0 22%' } }}>
                 <Card sx={{ bgcolor: 'success.light' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -123,8 +122,8 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              </Box>
+              <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 45%', md: '1 0 22%' } }}>
                 <Card sx={{ bgcolor: 'error.light' }}>
                   <CardContent>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -135,8 +134,8 @@ const Dashboard: React.FC = () => {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Box>
           
           {/* Recent projects */}
@@ -144,57 +143,54 @@ const Dashboard: React.FC = () => {
             Recent Projects
           </Typography>
           <Box sx={{ mb: 4 }}>
-            <Grid container spacing={2}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {projects.length > 0 ? (
                 projects.map(project => (
-                  <Grid size={12} key={project.id}>
-                    <Paper 
-                      elevation={1} 
-                      sx={{ 
-                        p: 2, 
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
-                      }}
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      <Typography variant="h6" gutterBottom>
-                        {project.label}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {project.description || 'No description'}
-                      </Typography>
-                      <Stack direction="row" spacing={1}>
-                        {project.tags.map((tag, index) => (
-                          <Chip 
-                            key={index} 
-                            label={tag} 
-                            size="small" 
-                            color="primary" 
-                            variant="outlined" 
-                          />
-                        ))}
-                      </Stack>
-                    </Paper>
-                  </Grid>
+                  <Paper 
+                    key={project.id}
+                    elevation={1} 
+                    sx={{ 
+                      p: 2, 
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                    }}
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      {project.label}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      {project.description || 'No description'}
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      {project.tags.map((tag, index) => (
+                        <Chip 
+                          key={index} 
+                          label={tag} 
+                          size="small" 
+                          color="primary" 
+                          variant="outlined" 
+                        />
+                      ))}
+                    </Stack>
+                  </Paper>
                 ))
               ) : (
-                <Grid size={12}>
-                  <Typography variant="body1" color="text.secondary" align="center">
-                    No projects found. Create your first project!
-                  </Typography>
-                </Grid>
+                <Typography variant="body1" color="text.secondary" align="center">
+                  No projects found. Create your first project!
+                </Typography>
               )}
-            </Grid>
+            </Box>
           </Box>
           
           {/* Recent monitors status */}
           <Typography variant="h5" gutterBottom>
             Monitor Status
           </Typography>
-          <Grid container spacing={2}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {recentMonitors.length > 0 ? (
               recentMonitors.map(monitor => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={monitor.id}>
+                <Box key={monitor.id} sx={{ flex: { xs: '1 0 100%', sm: '1 0 48%', md: '1 0 31%' } }}>
                   <Card 
                     sx={{ 
                       cursor: 'pointer',
@@ -226,16 +222,14 @@ const Dashboard: React.FC = () => {
                       )}
                     </CardContent>
                   </Card>
-                </Grid>
+                </Box>
               ))
             ) : (
-              <Grid size={12}>
-                <Typography variant="body1" color="text.secondary" align="center">
-                  No monitors found. Create your first monitor!
-                </Typography>
-              </Grid>
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ width: '100%' }}>
+                No monitors found. Create your first monitor!
+              </Typography>
             )}
-          </Grid>
+          </Box>
         </>
       )}
     </Box>

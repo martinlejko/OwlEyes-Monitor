@@ -20,14 +20,21 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import {
   Add as AddIcon,
   ArrowBack as ArrowBackIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
-import { getProject, getMonitors } from '../services/api';
+import { getProject, getMonitors, deleteProject } from '../services/api';
 import { Project, Monitor } from '../types';
 
 const ProjectDetail: React.FC = () => {
@@ -46,6 +53,11 @@ const ProjectDetail: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'up' | 'down'>('all');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  
+  // Delete dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   
   // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -144,6 +156,41 @@ const ProjectDetail: React.FC = () => {
     setStatusFilter('all');
   };
 
+  const handleDeleteClick = () => {
+    setDeleteError(null);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setIsDeleting(true);
+      
+      if (id) {
+        console.log('Confirming deletion of project ID:', id);
+        
+        // Add cache-busting timestamp for navigation
+        const timestamp = new Date().getTime();
+        
+        await deleteProject(parseInt(id));
+        console.log('Delete operation completed successfully');
+        
+        setDeleteDialogOpen(false);
+        
+        // Navigate back to projects list with cache buster
+        navigate(`/projects?_=${timestamp}`);
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      setDeleteError('Failed to delete the project. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading && monitors.length === 0) {
     return (
       <Box>
@@ -194,14 +241,34 @@ const ProjectDetail: React.FC = () => {
         >
           Back to Projects
         </Button>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<AddIcon />}
-          onClick={() => navigate(`/monitors/new?projectId=${id}`)}
-        >
-          Add Monitor
-        </Button>
+        <Box>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            startIcon={<EditIcon />}
+            onClick={() => navigate(`/projects/${id}/edit`)}
+            sx={{ mr: 1 }}
+          >
+            Edit Project
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="error" 
+            startIcon={<DeleteIcon />}
+            onClick={handleDeleteClick}
+            sx={{ mr: 1 }}
+          >
+            Delete Project
+          </Button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            onClick={() => navigate(`/monitors/new?projectId=${id}`)}
+          >
+            Add Monitor
+          </Button>
+        </Box>
       </Box>
       
       <Card sx={{ mb: 4 }}>
@@ -365,6 +432,41 @@ const ProjectDetail: React.FC = () => {
           </Grid>
         )}
       </Box>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-project-dialog-title"
+        aria-describedby="delete-project-dialog-description"
+      >
+        <DialogTitle id="delete-project-dialog-title">
+          Delete Project
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-project-dialog-description">
+            Are you sure you want to delete the project "{project.label}"? This action cannot be undone and will also delete all associated monitors.
+          </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

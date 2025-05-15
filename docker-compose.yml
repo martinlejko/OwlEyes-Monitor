@@ -47,6 +47,27 @@ services:
     networks:
       - owleyes-network
       
+  # Monitoring Service
+  monitoring:
+    build:
+      context: ./backend
+      dockerfile: ./docker/monitoring/Dockerfile
+    container_name: owleyes-monitoring
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/logs:/app/logs
+      - ./backend/.env:/app/.env
+    environment:
+      DB_HOST: postgres
+      DB_NAME: owleyes
+      DB_USER: owleyes
+      DB_PASSWORD: owleyes_password
+    networks:
+      - owleyes-network
+      
   # React Frontend
   frontend:
     image: node:18

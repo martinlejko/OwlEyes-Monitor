@@ -12,8 +12,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
-    libicu-dev \
-    cron
+    libicu-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -23,10 +22,6 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath intl
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Setup cron job - create file directly with echo instead of copying
-RUN echo "* * * * * root cd /var/www && php check_monitors.php >> /var/www/logs/cron.log 2>&1" > /etc/cron.d/owleyes-cron \
-    && chmod 0644 /etc/cron.d/owleyes-cron
 
 # Copy Apache configuration
 COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
@@ -42,6 +37,7 @@ COPY . /var/www
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www
+RUN mkdir -p /var/www/logs
 RUN chmod -R 755 /var/www/logs
 
 # Install dependencies
@@ -55,4 +51,4 @@ RUN mkdir -p /var/www/tests/Unit/Services /var/www/tests/Unit/Controllers /var/w
 RUN chown -R www-data:www-data /var/www/tests
 
 # Command to run application
-CMD service cron start && apache2-foreground 
+CMD ["apache2-foreground"] 

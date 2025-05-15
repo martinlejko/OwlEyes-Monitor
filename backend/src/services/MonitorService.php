@@ -48,9 +48,17 @@ class MonitorService
             if ($statusFilter !== null) {
                 $queryBuilder->leftJoin(
                     'm',
-                    '(SELECT monitor_id, status FROM monitor_status ORDER BY start_time DESC LIMIT 1)',
+                    '(SELECT monitor_id, MAX(start_time) as latest_time 
+                      FROM monitor_status 
+                      GROUP BY monitor_id)',
+                    'latest',
+                    'm.id = latest.monitor_id'
+                )
+                ->leftJoin(
+                    'latest',
+                    'monitor_status',
                     'ms',
-                    'm.id = ms.monitor_id'
+                    'latest.monitor_id = ms.monitor_id AND latest.latest_time = ms.start_time'
                 )
                 ->andWhere('ms.status = :status')
                 ->setParameter('status', $statusFilter ? 1 : 0);
@@ -259,9 +267,17 @@ class MonitorService
             if ($statusFilter !== null) {
                 $queryBuilder->leftJoin(
                     'm',
-                    '(SELECT monitor_id, status FROM monitor_status ORDER BY start_time DESC LIMIT 1)',
+                    '(SELECT monitor_id, MAX(start_time) as latest_time 
+                      FROM monitor_status 
+                      GROUP BY monitor_id)',
+                    'latest',
+                    'm.id = latest.monitor_id'
+                )
+                ->leftJoin(
+                    'latest',
+                    'monitor_status',
                     'ms',
-                    'm.id = ms.monitor_id'
+                    'latest.monitor_id = ms.monitor_id AND latest.latest_time = ms.start_time'
                 )
                 ->andWhere('ms.status = :status')
                 ->setParameter('status', $statusFilter ? 1 : 0);

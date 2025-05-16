@@ -107,8 +107,12 @@ const MonitorDetail: React.FC = () => {
         statusFilterValue = false;
       }
       
-      // Fetch data based on view mode
-      if (viewMode === 0) { // List view
+      console.log(`Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`);
+      
+      // Fetch data based on view mode - preserving the current state
+      const currentViewMode = viewMode; // Ensure we use the passed viewMode
+      
+      if (currentViewMode === 0) { // List view
         const response = await getMonitorStatuses(
           monitorId, 
           page + 1, 
@@ -124,11 +128,16 @@ const MonitorDetail: React.FC = () => {
         setStatuses(listResponse.data);
         setTotalStatusCount(listResponse.meta.total);
         
-      } else if (viewMode === 1) { // Calendar view
-        // Use a dynamic approach to date ranges
-        // First try looking at the most recent 3 months of data (default view)
-        const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
-        const toDate = new Date(); // To today
+      } else if (currentViewMode === 1) { // Calendar view
+        // For calendar view, if date filters are specified, use them
+        // otherwise use the default 3-month range
+        let fromDate = from;
+        let toDate = to;
+        
+        if (!fromDate && !toDate) {
+          fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
+          toDate = new Date(); // To today
+        }
         
         const response = await getMonitorStatuses(
           monitorId, 
@@ -144,14 +153,19 @@ const MonitorDetail: React.FC = () => {
         const calendarResponse = response as { data: CalendarDataPoint[] };
         setCalendarData(calendarResponse.data);
         
-      } else if (viewMode === 2) { // Graph view
+      } else if (currentViewMode === 2) { // Graph view
+        // For graph view, if date filters are specified, use them
+        // otherwise use the default 1-month range
+        let fromDate = from || subMonths(new Date(), 1);
+        let toDate = to || new Date();
+        
         const response = await getMonitorStatuses(
           monitorId, 
           1, 
           100, 
-          from || subMonths(new Date(), 1), // Default to 1 month if not specified
-          to || new Date(),
-          undefined, // Don't filter by status for graph
+          fromDate,
+          toDate,
+          statusFilterValue, // Apply status filter for graph view too
           'graph'
         );
         
@@ -160,7 +174,18 @@ const MonitorDetail: React.FC = () => {
         setGraphData(graphResponse.data);
       }
       
+      // Only set loading to false once all operations complete
       setLoading(false);
+      
+      // Log successful completion with preserved filter values
+      console.log('Status data fetch complete with preserved filters:', {
+        viewMode: currentViewMode,
+        statusFilter,
+        dateFrom,
+        dateTo,
+        page
+      });
+      
     } catch (err: any) {
       console.error('Error fetching status data:', err);
       setError(err.message || 'Failed to load status data');
@@ -171,18 +196,50 @@ const MonitorDetail: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     setError(null);
+    
+    // First fetch the monitor data
     await fetchMonitor();
-    await fetchStatusData();
+    
+    // Then fetch status data with current filters preserved
+    const currentTabValue = tabValue;
+    console.log('Initial data fetch with preserved filters:', {
+      tabValue: currentTabValue,
+      statusFilter,
+      dateFrom,
+      dateTo,
+      page
+    });
+    
+    await fetchStatusData(currentTabValue);
   };
 
   // Initialize data
   useEffect(() => {
     fetchData();
     
-    // Set up live updates
+    // Set up live updates with a reference to the current state values
     updateIntervalRef.current = setInterval(() => {
+      // Only refresh monitor data without refreshing status data if filters are applied
       fetchMonitor();
-      fetchStatusData();
+      
+      // Create a closure to capture the current filter state values
+      const capturedTabValue = tabValue;
+      const capturedStatusFilter = statusFilter;
+      const capturedDateFrom = dateFrom;
+      const capturedDateTo = dateTo;
+      const capturedPage = page;
+      const capturedRowsPerPage = rowsPerPage;
+      
+      console.log('Auto-refresh with preserved filters:', {
+        tabValue: capturedTabValue,
+        statusFilter: capturedStatusFilter,
+        dateFrom: capturedDateFrom,
+        dateTo: capturedDateTo,
+        page: capturedPage
+      });
+      
+      // Pass all current state to ensure filters are preserved
+      fetchStatusData(capturedTabValue);
     }, 5000); // 5 seconds update interval
     
     return () => {
@@ -195,8 +252,19 @@ const MonitorDetail: React.FC = () => {
   
   // Fetch data when filters or pagination change
   useEffect(() => {
-    fetchStatusData();
-  }, [page, rowsPerPage, statusFilter, dateFrom, dateTo, tabValue]);
+    // Skip on initial render as fetchData will handle it
+    // Note: we need to check if loading is false AND we have monitor data
+    if (!loading && monitor) {
+      console.log('Filter changed, refreshing data with:', {
+        tabValue,
+        statusFilter,
+        dateFrom,
+        dateTo,
+        page
+      });
+      fetchStatusData(tabValue);
+    }
+  }, [page, rowsPerPage, statusFilter, dateFrom, dateTo, tabValue, monitor]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -227,7 +295,21 @@ const MonitorDetail: React.FC = () => {
   };
   
   const handleRefresh = () => {
-    fetchStatusData();
+    // Create local variables to ensure current state is used
+    const currentTabValue = tabValue;
+    const currentStatusFilter = statusFilter;
+    const currentDateFrom = dateFrom;
+    const currentDateTo = dateTo;
+    
+    console.log('Manual refresh with filters:', {
+      tabValue: currentTabValue,
+      statusFilter: currentStatusFilter,
+      dateFrom: currentDateFrom,
+      dateTo: currentDateTo
+    });
+    
+    // Explicitly call fetchStatusData with current tabValue and preserve all filters
+    fetchStatusData(currentTabValue);
   };
 
   const handleEditClick = () => {
@@ -455,4 +537,4 @@ const MonitorDetail: React.FC = () => {
   );
 };
 
-export default MonitorDetail; 
+export default MonitorDetail;

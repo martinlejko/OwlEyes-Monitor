@@ -8,11 +8,14 @@ import {
   Select,
   MenuItem,
   TextField,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Stack,
+  CircularProgress
 } from '@mui/material';
 import { 
   Refresh as RefreshIcon,
-  FilterAlt as FilterIcon
+  FilterAlt as FilterIcon,
+  RestartAlt as ResetIcon
 } from '@mui/icons-material';
 
 interface FilterBarProps {
@@ -22,6 +25,8 @@ interface FilterBarProps {
   onStatusFilterChange: (event: SelectChangeEvent) => void;
   onDateChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRefresh: () => void;
+  onResetFilters?: () => void;
+  isRefreshing?: boolean;
 }
 
 /**
@@ -34,7 +39,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   dateTo,
   onStatusFilterChange,
   onDateChange,
-  onRefresh
+  onRefresh,
+  onResetFilters,
+  isRefreshing = false
 }) => {
   return (
     <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
@@ -90,14 +97,29 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </Box>
         
         <Box>
-          <Button 
-            startIcon={<RefreshIcon />} 
-            onClick={onRefresh}
-            variant="outlined"
-            size="small"
-          >
-            Refresh
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button 
+              startIcon={isRefreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+              onClick={onRefresh}
+              variant="outlined"
+              size="small"
+              color="primary"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            
+            <Button 
+              startIcon={<ResetIcon />} 
+              onClick={onResetFilters}
+              variant="outlined"
+              size="small"
+              color="secondary"
+              disabled={!onResetFilters || (statusFilter === 'all' && !dateFrom && !dateTo) || isRefreshing}
+            >
+              Reset
+            </Button>
+          </Stack>
         </Box>
       </Box>
     </Box>

@@ -69,6 +69,9 @@ const MonitorDetail: React.FC = () => {
   // Ref for auto-update interval
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Add new state for refresh loading
+  const [refreshing, setRefreshing] = useState(false);
+
   const fetchMonitor = async () => {
     try {
       if (!id) return;
@@ -294,7 +297,10 @@ const MonitorDetail: React.FC = () => {
     setPage(0); // Reset to first page on filter change
   };
   
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    // Set refreshing state to true to show loading indicator
+    setRefreshing(true);
+    
     // Create local variables to ensure current state is used
     const currentTabValue = tabValue;
     const currentStatusFilter = statusFilter;
@@ -308,8 +314,46 @@ const MonitorDetail: React.FC = () => {
       dateTo: currentDateTo
     });
     
-    // Explicitly call fetchStatusData with current tabValue and preserve all filters
-    fetchStatusData(currentTabValue);
+    try {
+      // Explicitly call fetchStatusData with current tabValue and preserve all filters
+      await fetchStatusData(currentTabValue);
+      // Flash a success message or indication here if needed
+    } catch (error) {
+      console.error('Error during manual refresh:', error);
+      // Handle any errors during refresh
+    } finally {
+      // Reset refreshing state after a short delay to make the loading indicator visible
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 500);
+    }
+  };
+
+  const handleResetFilters = async () => {
+    console.log('Resetting all filters to default values');
+    
+    // Show loading indicator
+    setRefreshing(true);
+    
+    // Reset filter states to their defaults
+    setStatusFilter('all');
+    setDateFrom('');
+    setDateTo('');
+    // Also reset to the first page
+    setPage(0);
+    
+    try {
+      // Fetch data with the reset filters
+      console.log('Fetching data with reset filters');
+      await fetchStatusData(tabValue);
+    } catch (error) {
+      console.error('Error during filter reset:', error);
+    } finally {
+      // Reset refreshing state after a short delay
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 500);
+    }
   };
 
   const handleEditClick = () => {
@@ -481,6 +525,8 @@ const MonitorDetail: React.FC = () => {
             onStatusFilterChange={handleStatusFilterChange}
             onDateChange={handleDateChange}
             onRefresh={handleRefresh}
+            onResetFilters={handleResetFilters}
+            isRefreshing={refreshing}
           />
           
           {/* List View */}

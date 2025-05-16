@@ -9,7 +9,7 @@ OwlEyes is a comprehensive monitoring solution that helps you track the status o
 - **Website Monitoring**: Monitor websites for availability, status codes, and specific content
 - **Status Badges**: Add status badges to your README or website to show real-time monitoring status
 - **Multiple Views**: View monitor history in list, calendar, or graph mode with real-time updates
-- **API Access**: Access all functionality through RESTful API or GraphQL interface
+- **API Access**: Access all functionality through RESTful API.
 
 ## Technology Stack
 
@@ -29,7 +29,7 @@ OwlEyes is a comprehensive monitoring solution that helps you track the status o
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/owleyes.git
+   git clone https://github.com/martinlejko/OwlEyes-Monitor.git
    cd owleyes
    ```
 
@@ -46,14 +46,13 @@ OwlEyes is a comprehensive monitoring solution that helps you track the status o
 4. Access the application
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8000/api
-   - GraphQL: http://localhost:8000/graphql
    - API Documentation: http://localhost:8000/api-docs
 
 ## Development
 
 ### Backend
 
-The backend is built with PHP 8.1 using the Slim Framework. It provides a RESTful API and GraphQL interface for interacting with the application.
+The backend is built with PHP 8.2 using the Slim Framework. It provides a RESTful API for interacting with the application.
 
 ```bash
 # Enter the backend container
@@ -128,28 +127,6 @@ The REST API provides endpoints for managing projects, monitors, and accessing m
 You can access the interactive API documentation at:
 - OpenAPI JSON: http://localhost:8000/docs
 - Swagger UI: http://localhost:8000/api-docs
-
-### GraphQL
-
-The GraphQL API provides a flexible query interface for accessing projects, monitors, and statuses.
-
-Access the GraphQL endpoint at: http://localhost:8000/graphql
-
-Example query:
-```graphql
-{
-  projects {
-    identifier
-    label
-    description
-    monitors {
-      identifier
-      label
-      type
-    }
-  }
-}
-```
 
 ### Status Badge API
 

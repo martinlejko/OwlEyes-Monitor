@@ -16,7 +16,7 @@ import {
   CalendarMonth as CalendarIcon,
   ShowChart as ChartIcon
 } from '@mui/icons-material';
-import { subMonths } from 'date-fns';
+import { subMonths, startOfMonth } from 'date-fns';
 import { getMonitor, getMonitorStatuses, deleteMonitor } from '../services/api';
 import { Monitor, MonitorStatus, PaginatedResponse, CalendarDataPoint, GraphDataPoint } from '../types';
 
@@ -125,12 +125,17 @@ const MonitorDetail: React.FC = () => {
         setTotalStatusCount(listResponse.meta.total);
         
       } else if (viewMode === 1) { // Calendar view
+        // Use a dynamic approach to date ranges
+        // First try looking at the most recent 3 months of data (default view)
+        const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
+        const toDate = new Date(); // To today
+        
         const response = await getMonitorStatuses(
           monitorId, 
           1, 
-          100, 
-          subMonths(new Date(), 2), // From 3 months ago
-          new Date(), // To today
+          1000, // Large enough to ensure we get all needed data
+          fromDate,
+          toDate,
           statusFilterValue,
           'calendar'
         );
@@ -415,6 +420,7 @@ const MonitorDetail: React.FC = () => {
               data={calendarData} 
               onRefresh={handleRefresh} 
               loading={loading}
+              monitorId={monitor.id}
             />
           </TabPanel>
           

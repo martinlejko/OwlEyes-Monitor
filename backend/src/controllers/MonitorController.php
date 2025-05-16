@@ -344,10 +344,12 @@ class MonitorController
                     if (!$fromDate) {
                         $fromDate = new \DateTime();
                         $fromDate->modify('-3 months');
+                        $fromDate->setTime(0, 0, 0);
                     }
                     
                     if (!$toDate) {
                         $toDate = new \DateTime();
+                        $toDate->setTime(23, 59, 59);
                     }
                     
                     $data = $this->statusService->getDailyStatusSummary($id, $fromDate, $toDate);

@@ -1,27 +1,94 @@
-import React from 'react';
-import { Box, Typography, Button, Paper, Tooltip } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, Button, Paper, Tooltip, CircularProgress } from '@mui/material';
 import { RefreshOutlined as RefreshIcon } from '@mui/icons-material';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { CalendarDataPoint } from '../../types';
+import { getMonitorStatuses } from '../../services/api';
 
 interface CalendarViewProps {
   data: CalendarDataPoint[];
   onRefresh: () => void;
   loading?: boolean;
+  monitorId?: number;
 }
 
 /**
  * Calendar view for monitoring history
  * Shows 3 months of data with color-coded days based on uptime/downtime
  */
-export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loading }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loading, monitorId }) => {
+  // Add local state to store data if parent component data is empty
+  const [localData, setLocalData] = useState<CalendarDataPoint[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch data directly if parent component didn't provide any and we have monitorId
+  useEffect(() => {
+    const fetchCalendarData = async () => {
+      if ((data.length === 0 || error) && monitorId) {
+        setLocalLoading(true);
+        setError(null);
+        
+        try {
+          // First attempt: check if there's any data in the last year
+          const today = new Date();
+          const lastYear = new Date(today);
+          lastYear.setFullYear(lastYear.getFullYear() - 1);
+          
+          const response = await getMonitorStatuses(
+            monitorId,
+            1,
+            1000,
+            lastYear, // Look back one full year
+            today,
+            undefined,
+            'calendar'
+          );
+          
+          // Type assertion
+          const calendarResponse = response as { data: CalendarDataPoint[] };
+          
+          if (Array.isArray(calendarResponse.data)) {
+            setLocalData(calendarResponse.data);
+            
+            if (calendarResponse.data.length === 0) {
+              setError('No data found for the last year. Try adjusting the date filters.');
+            }
+          } else {
+            setError('Received unexpected data format from server');
+          }
+        } catch (error: any) {
+          let errorMessage = 'Failed to load calendar data.';
+          
+          if (error.response?.status === 500) {
+            errorMessage = 'Server error processing calendar data. The error has been logged.';
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          setError(errorMessage);
+        } finally {
+          setLocalLoading(false);
+        }
+      }
+    };
+    
+    fetchCalendarData();
+  }, [data.length, monitorId, error]);
+  
+  // Use localData if we have it, otherwise use props data
+  const displayData = localData.length > 0 ? localData : data;
+  const isLoading = loading || localLoading;
+  
   const getMonthData = (month: Date) => {
     const startDate = format(startOfMonth(month), 'yyyy-MM-dd');
     const endDate = format(endOfMonth(month), 'yyyy-MM-dd');
     
-    return data.filter(point => 
+    const filteredData = displayData.filter(point => 
       point.date >= startDate && point.date <= endDate
     );
+    
+    return filteredData;
   };
 
   const today = new Date();
@@ -64,7 +131,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
               let statusText = 'No data';
               
               if (dayData) {
-                if (dayData.status === 'success') {
+                if (dayData.total === 0) { // Check for no actual pings first
+                  bgColor = '#eeeeee'; // No data color
+                  statusText = 'No data';
+                } else if (dayData.status === 'success') {
                   bgColor = '#4caf50'; // Green for success
                   statusText = '100% uptime';
                 } else if (dayData.status === 'warning') {
@@ -112,37 +182,64 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
           startIcon={<RefreshIcon />} 
           onClick={onRefresh}
           variant="outlined"
+          disabled={isLoading}
         >
           Refresh
         </Button>
       </Box>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="body2" paragraph>
-          Each day is color-coded based on the monitor's performance:
-          <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: '#4caf50', borderRadius: 1, mr: 1 }} />
-              <Typography variant="body2">100% Up</Typography>
+      
+      {isLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {error && !isLoading && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: '#ffebee' }}>
+          <Typography color="error">{error}</Typography>
+          <Typography variant="body2" mt={1}>
+            Try refreshing the page or checking the server logs for more details.
+          </Typography>
+        </Paper>
+      )}
+      
+      {!isLoading && !error && displayData.length === 0 && (
+        <Paper sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="body1" color="text.secondary">
+            No data available for the selected date range.
+          </Typography>
+        </Paper>
+      )}
+      
+      {!isLoading && displayData.length > 0 && (
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="body2" paragraph>
+            Each day is color-coded based on the monitor's performance:
+            <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ width: 16, height: 16, bgcolor: '#4caf50', borderRadius: 1, mr: 1 }} />
+                <Typography variant="body2">100% Up</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ width: 16, height: 16, bgcolor: '#ff9800', borderRadius: 1, mr: 1 }} />
+                <Typography variant="body2">≤ 5% Failures</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ width: 16, height: 16, bgcolor: '#f44336', borderRadius: 1, mr: 1 }} />
+                <Typography variant="body2">{`> 5% Failures`}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ width: 16, height: 16, bgcolor: '#eeeeee', borderRadius: 1, mr: 1 }} />
+                <Typography variant="body2">No Data</Typography>
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: '#ff9800', borderRadius: 1, mr: 1 }} />
-              <Typography variant="body2">≤ 5% Failures</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: '#f44336', borderRadius: 1, mr: 1 }} />
-              <Typography variant="body2">{`> 5% Failures`}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ width: 16, height: 16, bgcolor: '#eeeeee', borderRadius: 1, mr: 1 }} />
-              <Typography variant="body2">No Data</Typography>
-            </Box>
-          </Box>
-        </Typography>
-        
-        {renderMonth(currentMonth)}
-        {renderMonth(prevMonth)}
-        {renderMonth(prevPrevMonth)}
-      </Paper>
+          </Typography>
+          
+          {renderMonth(currentMonth)}
+          {renderMonth(prevMonth)}
+          {renderMonth(prevPrevMonth)}
+        </Paper>
+      )}
     </Box>
   );
 }; 

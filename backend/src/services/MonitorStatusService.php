@@ -125,51 +125,44 @@ class MonitorStatusService
     public function getDailyStatusSummary(int $monitorId, \DateTime $startDate, \DateTime $endDate): array
     {
         try {
-            // Get total count of checks per day
-            $totalChecksQuery = $this->db->createQueryBuilder()
-                ->select('DATE(start_time) as date, COUNT(*) as total')
+            // Get raw status data 
+            $queryBuilder = $this->db->createQueryBuilder()
+                ->select('*')
                 ->from('monitor_status')
                 ->where('monitor_id = :monitorId')
-                ->andWhere('start_time BETWEEN :startDate AND :endDate')
                 ->setParameter('monitorId', $monitorId)
-                ->setParameter('startDate', $startDate->format('Y-m-d'))
-                ->setParameter('endDate', $endDate->format('Y-m-d 23:59:59'))
-                ->groupBy('DATE(start_time)')
-                ->executeQuery()
-                ->fetchAllAssociative();
+                ->orderBy('start_time', 'DESC')
+                ->setMaxResults(1000); // Get up to 1000 recent records
             
-            // Get failed count per day
-            $failedChecksQuery = $this->db->createQueryBuilder()
-                ->select('DATE(start_time) as date, COUNT(*) as failed')
-                ->from('monitor_status')
-                ->where('monitor_id = :monitorId')
-                ->andWhere('status = 0')
-                ->andWhere('start_time BETWEEN :startDate AND :endDate')
-                ->setParameter('monitorId', $monitorId)
-                ->setParameter('startDate', $startDate->format('Y-m-d'))
-                ->setParameter('endDate', $endDate->format('Y-m-d 23:59:59'))
-                ->groupBy('DATE(start_time)')
-                ->executeQuery()
-                ->fetchAllAssociative();
+            $results = $queryBuilder->executeQuery()->fetchAllAssociative();
             
-            // Convert to associative array
-            $totalChecks = [];
-            foreach ($totalChecksQuery as $row) {
-                $totalChecks[$row['date']] = (int)$row['total'];
+            // Group by day
+            $dayData = [];
+            foreach ($results as $row) {
+                // Extract date part only
+                $dateTime = new \DateTime($row['start_time']);
+                $dateStr = $dateTime->format('Y-m-d');
+                
+                if (!isset($dayData[$dateStr])) {
+                    $dayData[$dateStr] = [
+                        'total' => 0,
+                        'failed' => 0
+                    ];
+                }
+                
+                $dayData[$dateStr]['total']++;
+                
+                // Count failed checks (status = 0 means failed)
+                if ((int)$row['status'] === 0) {
+                    $dayData[$dateStr]['failed']++;
+                }
             }
             
-            $failedChecks = [];
-            foreach ($failedChecksQuery as $row) {
-                $failedChecks[$row['date']] = (int)$row['failed'];
-            }
-            
-            // Create result array
+            // Convert to CalendarDataPoint format
             $result = [];
-            $current = clone $startDate;
-            while ($current <= $endDate) {
-                $dateString = $current->format('Y-m-d');
-                $total = $totalChecks[$dateString] ?? 0;
-                $failed = $failedChecks[$dateString] ?? 0;
+            foreach ($dayData as $date => $counts) {
+                $total = $counts['total'];
+                $failed = $counts['failed'];
                 
                 $status = 'success'; // default
                 if ($total > 0) {
@@ -182,18 +175,16 @@ class MonitorStatusService
                 }
                 
                 $result[] = [
-                    'date' => $dateString,
+                    'date' => $date,
                     'total' => $total,
                     'failed' => $failed,
                     'status' => $status
                 ];
-                
-                $current->modify('+1 day');
             }
             
             return $result;
         } catch (\Exception $e) {
-            $this->logger->error('Error fetching monitor daily status summary: ' . $e->getMessage());
+            $this->logger->error('Error in getDailyStatusSummary: ' . $e->getMessage());
             throw $e;
         }
     }

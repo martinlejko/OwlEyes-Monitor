@@ -93,21 +93,23 @@ const MonitorDetail: React.FC = () => {
       let to: Date | undefined = undefined;
       let statusFilterValue: boolean | undefined = undefined;
       
-      // Handle filters
-      if (dateFrom) {
-        from = new Date(dateFrom);
-      }
-      
-      if (dateTo) {
-        to = new Date(dateTo);
-        // Set time to end of day
-        to.setHours(23, 59, 59, 999);
-      }
-      
-      if (statusFilter === 'up') {
-        statusFilterValue = true;
-      } else if (statusFilter === 'down') {
-        statusFilterValue = false;
+      // Handle filters - only apply for list view
+      if (viewMode === 0) {
+        if (dateFrom) {
+          from = new Date(dateFrom);
+        }
+        
+        if (dateTo) {
+          to = new Date(dateTo);
+          // Set time to end of day
+          to.setHours(23, 59, 59, 999);
+        }
+        
+        if (statusFilter === 'up') {
+          statusFilterValue = true;
+        } else if (statusFilter === 'down') {
+          statusFilterValue = false;
+        }
       }
       
       console.log(`Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`);
@@ -132,15 +134,9 @@ const MonitorDetail: React.FC = () => {
         setTotalStatusCount(listResponse.meta.total);
         
       } else if (currentViewMode === 1) { // Calendar view
-        // For calendar view, if date filters are specified, use them
-        // otherwise use the default 3-month range
-        let fromDate = from;
-        let toDate = to;
-        
-        if (!fromDate && !toDate) {
-          fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
-          toDate = new Date(); // To today
-        }
+        // For calendar view, always use a fixed 3-month range and don't apply filters
+        const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
+        const toDate = new Date(); // To today
         
         const response = await getMonitorStatuses(
           monitorId, 
@@ -148,7 +144,7 @@ const MonitorDetail: React.FC = () => {
           1000, // Large enough to ensure we get all needed data
           fromDate,
           toDate,
-          statusFilterValue,
+          undefined, // Don't use status filter for calendar view
           'calendar'
         );
         
@@ -157,10 +153,9 @@ const MonitorDetail: React.FC = () => {
         setCalendarData(calendarResponse.data);
         
       } else if (currentViewMode === 2) { // Graph view
-        // For graph view, if date filters are specified, use them
-        // otherwise use the default 1-month range
-        let fromDate = from || subMonths(new Date(), 1);
-        let toDate = to || new Date();
+        // For graph view, always use a fixed 1-month range and don't apply filters
+        const fromDate = subMonths(new Date(), 1);
+        const toDate = new Date();
         
         const response = await getMonitorStatuses(
           monitorId, 
@@ -168,7 +163,7 @@ const MonitorDetail: React.FC = () => {
           100, 
           fromDate,
           toDate,
-          statusFilterValue, // Apply status filter for graph view too
+          undefined, // Don't use status filter for graph view
           'graph'
         );
         
@@ -517,17 +512,19 @@ const MonitorDetail: React.FC = () => {
             </Tabs>
           </Box>
           
-          {/* Filters */}
-          <FilterBar 
-            statusFilter={statusFilter}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-            onStatusFilterChange={handleStatusFilterChange}
-            onDateChange={handleDateChange}
-            onRefresh={handleRefresh}
-            onResetFilters={handleResetFilters}
-            isRefreshing={refreshing}
-          />
+          {/* Filters - only show for List view */}
+          {tabValue === 0 && (
+            <FilterBar 
+              statusFilter={statusFilter}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onStatusFilterChange={handleStatusFilterChange}
+              onDateChange={handleDateChange}
+              onRefresh={handleRefresh}
+              onResetFilters={handleResetFilters}
+              isRefreshing={refreshing}
+            />
+          )}
           
           {/* List View */}
           <TabPanel value={tabValue} index={0}>

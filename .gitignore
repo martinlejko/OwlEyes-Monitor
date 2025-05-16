@@ -23,6 +23,8 @@ frontend/logs/*.log
 .env
 .env.local
 .env.*.local
+backend/.env
+*.env
 
 # Build artifacts
 frontend/build/

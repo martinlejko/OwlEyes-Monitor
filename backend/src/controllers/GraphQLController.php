@@ -21,7 +21,7 @@ class GraphQLController
     private MonitorStatusService $statusService;
     private LoggerInterface $logger;
     private bool $debug;
-    
+
     public function __construct(
         ProjectService $projectService,
         MonitorService $monitorService,
@@ -30,25 +30,25 @@ class GraphQLController
     ) {
         $this->projectService = $projectService;
         $this->monitorService = $monitorService;
-        $this->statusService = $statusService;
-        $this->logger = $logger;
-        $this->debug = $_ENV['APP_DEBUG'] ?? false;
+        $this->statusService  = $statusService;
+        $this->logger         = $logger;
+        $this->debug          = $_ENV['APP_DEBUG'] ?? false;
     }
-    
+
     public function handleRequest(Request $request, Response $response): Response
     {
         try {
-            $data = $request->getParsedBody();
-            $query = $data['query'] ?? null;
+            $data      = $request->getParsedBody();
+            $query     = $data['query']     ?? null;
             $variables = $data['variables'] ?? null;
-            
+
             if (!$query) {
                 throw new \InvalidArgumentException('Missing GraphQL query');
             }
-            
+
             // Define schema
             $schema = $this->getSchema();
-            
+
             // Execute query
             $result = GraphQL::executeQuery(
                 $schema,
@@ -57,13 +57,14 @@ class GraphQLController
                 null,
                 $variables
             );
-            
+
             // Format result
             $output = $result->toArray(
                 $this->debug ? DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE : DebugFlag::NONE
             );
-            
+
             $response->getBody()->write(json_encode($output));
+
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $this->logger->error('GraphQL error: ' . $e->getMessage());
@@ -71,127 +72,128 @@ class GraphQLController
                 'errors' => [
                     [
                         'message' => $e->getMessage(),
-                        'trace' => $this->debug ? $e->getTraceAsString() : null
+                        'trace'   => $this->debug ? $e->getTraceAsString() : null
                     ]
                 ]
             ]));
+
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
     }
-    
+
     private function getSchema(): Schema
     {
         // Status type
         $statusType = new ObjectType([
-            'name' => 'Status',
+            'name'   => 'Status',
             'fields' => [
                 'date' => [
-                    'type' => Type::string(),
+                    'type'    => Type::string(),
                     'resolve' => function ($status) {
                         return $status->getStartTime()->format(\DateTime::ATOM);
                     }
                 ],
                 'ok' => [
-                    'type' => Type::boolean(),
+                    'type'    => Type::boolean(),
                     'resolve' => function ($status) {
                         return $status->getStatus();
                     }
                 ],
                 'responseTime' => [
-                    'type' => Type::int(),
+                    'type'    => Type::int(),
                     'resolve' => function ($status) {
                         return $status->getResponseTime();
                     }
                 ]
             ]
         ]);
-        
+
         // Monitor type
         $monitorType = new ObjectType([
-            'name' => 'Monitor',
+            'name'   => 'Monitor',
             'fields' => [
                 'identifier' => [
-                    'type' => Type::id(),
+                    'type'    => Type::id(),
                     'resolve' => function ($monitor) {
                         return (string) $monitor->getId();
                     }
                 ],
                 'periodicity' => [
-                    'type' => Type::int(),
+                    'type'    => Type::int(),
                     'resolve' => function ($monitor) {
                         return $monitor->getPeriodicity();
                     }
                 ],
                 'label' => [
-                    'type' => Type::id(),
+                    'type'    => Type::id(),
                     'resolve' => function ($monitor) {
                         return $monitor->getLabel();
                     }
                 ],
                 'type' => [
-                    'type' => Type::string(),
+                    'type'    => Type::string(),
                     'resolve' => function ($monitor) {
                         return $monitor->getType();
                     }
                 ],
                 'host' => [
-                    'type' => Type::string(),
+                    'type'    => Type::string(),
                     'resolve' => function ($monitor) {
                         return $monitor->getHost();
                     }
                 ],
                 'url' => [
-                    'type' => Type::string(),
+                    'type'    => Type::string(),
                     'resolve' => function ($monitor) {
                         return $monitor->getUrl();
                     }
                 ],
                 'badgeUrl' => [
-                    'type' => Type::string(),
+                    'type'    => Type::string(),
                     'resolve' => function ($monitor) {
                         return $_ENV['APP_URL'] . '/badge/' . $monitor->getId();
                     }
                 ]
             ]
         ]);
-        
+
         // Project type
         $projectType = new ObjectType([
-            'name' => 'Project',
+            'name'   => 'Project',
             'fields' => [
                 'identifier' => [
-                    'type' => Type::id(),
+                    'type'    => Type::id(),
                     'resolve' => function ($project) {
                         return (string) $project->getId();
                     }
                 ],
                 'label' => [
-                    'type' => Type::id(),
+                    'type'    => Type::id(),
                     'resolve' => function ($project) {
                         return $project->getLabel();
                     }
                 ],
                 'description' => [
-                    'type' => Type::id(),
+                    'type'    => Type::id(),
                     'resolve' => function ($project) {
                         return $project->getDescription();
                     }
                 ],
                 'monitors' => [
-                    'type' => Type::listOf($monitorType),
+                    'type'    => Type::listOf($monitorType),
                     'resolve' => function ($project) {
                         return $this->monitorService->findAll(1, 100, $project->getId());
                     }
                 ]
             ]
         ]);
-        
+
         // Query type
         $queryType = new ObjectType([
-            'name' => 'Query',
+            'name'   => 'Query',
             'fields' => [
                 'projects' => [
-                    'type' => Type::nonNull(Type::listOf(Type::nonNull($projectType))),
+                    'type'    => Type::nonNull(Type::listOf(Type::nonNull($projectType))),
                     'resolve' => function () {
                         return $this->projectService->findAll(1, 100);
                     }
@@ -200,41 +202,41 @@ class GraphQLController
                     'type' => Type::listOf(Type::nonNull($statusType)),
                     'args' => [
                         'monitorIdentifier' => Type::nonNull(Type::string()),
-                        'from' => Type::int(),
-                        'to' => Type::int()
+                        'from'              => Type::int(),
+                        'to'                => Type::int()
                     ],
                     'resolve' => function ($root, $args) {
                         $monitorId = (int) $args['monitorIdentifier'];
-                        
+
                         // Validate monitor exists
                         $monitor = $this->monitorService->find($monitorId);
                         if (!$monitor) {
                             return [];
                         }
-                        
+
                         // Handle date filters
                         $fromDate = null;
                         if (isset($args['from'])) {
                             $timestamp = $args['from'];
-                            $fromDate = new \DateTime();
+                            $fromDate  = new \DateTime();
                             $fromDate->setTimestamp($timestamp);
                         }
-                        
+
                         $toDate = null;
                         if (isset($args['to'])) {
                             $timestamp = $args['to'];
-                            $toDate = new \DateTime();
+                            $toDate    = new \DateTime();
                             $toDate->setTimestamp($timestamp);
                         }
-                        
+
                         return $this->statusService->findByMonitor($monitorId, 1, 100, $fromDate, $toDate);
                     }
                 ]
             ]
         ]);
-        
+
         return new Schema([
             'query' => $queryType
         ]);
     }
-} 
+}

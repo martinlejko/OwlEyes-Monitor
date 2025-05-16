@@ -4,9 +4,9 @@ namespace Martinlejko\Backend\Commands;
 
 use Doctrine\DBAL\Connection;
 use Martinlejko\Backend\Models\Monitor;
+use Martinlejko\Backend\Services\MonitoringService;
 use Martinlejko\Backend\Services\MonitorService;
 use Martinlejko\Backend\Services\MonitorStatusService;
-use Martinlejko\Backend\Services\MonitoringService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -27,11 +27,11 @@ class WebsiteMonitorSetupCommand
         MonitoringService $monitoringService,
         LoggerInterface $logger
     ) {
-        $this->db = $db;
-        $this->monitorService = $monitorService;
-        $this->statusService = $statusService;
+        $this->db                = $db;
+        $this->monitorService    = $monitorService;
+        $this->statusService     = $statusService;
         $this->monitoringService = $monitoringService;
-        $this->logger = $logger;
+        $this->logger            = $logger;
     }
 
     /**
@@ -53,7 +53,7 @@ class WebsiteMonitorSetupCommand
                 ['YouTube'],
                 true
             );
-            
+
             $this->addTestMonitor(
                 'Google Check',
                 'https://www.google.com',
@@ -69,9 +69,11 @@ class WebsiteMonitorSetupCommand
             $this->setupCronJob();
 
             $this->logger->info('Website monitor setup completed successfully');
+
             return 0;
         } catch (\Exception $e) {
             $this->logger->error('Error in website monitor setup: ' . $e->getMessage());
+
             return 1;
         }
     }
@@ -86,7 +88,7 @@ class WebsiteMonitorSetupCommand
             SET url = REPLACE(url, 'http://localhost:', 'http://host.docker.internal:') 
             WHERE type = 'website' AND url LIKE 'http://localhost:%'
         ");
-        
+
         $this->logger->info("Updated {$result} monitors with localhost URLs to use host.docker.internal");
     }
 
@@ -106,18 +108,19 @@ class WebsiteMonitorSetupCommand
         array $keywords = [],
         bool $checkStatus = true
     ): void {
-        $existingMonitors = $this->db->fetchAllAssociative("
+        $existingMonitors = $this->db->fetchAllAssociative(
+            "
             SELECT id FROM monitors 
             WHERE type = 'website' AND url = :url",
             ['url' => $url]
         );
-        
+
         if (empty($existingMonitors)) {
             $this->logger->info("Creating new test monitor for {$url}");
-            
+
             // Get the first project ID to associate the monitor with
-            $projectId = $this->db->fetchOne("SELECT id FROM projects LIMIT 1");
-            
+            $projectId = $this->db->fetchOne('SELECT id FROM projects LIMIT 1');
+
             if ($projectId) {
                 // Create test monitor
                 $testMonitor = new Monitor(
@@ -127,18 +130,18 @@ class WebsiteMonitorSetupCommand
                     'website',
                     strtolower(parse_url($url, PHP_URL_HOST) ?? 'test')
                 );
-                
+
                 $testMonitor->setUrl($url)
                           ->setCheckStatus($checkStatus);
-                
+
                 if (!empty($keywords)) {
                     $testMonitor->setKeywords($keywords);
                 }
-                
+
                 $this->monitorService->create($testMonitor);
                 $this->logger->info("{$label} monitor created with ID: " . $testMonitor->getId());
             } else {
-                $this->logger->warning("No projects found to associate test monitor with");
+                $this->logger->warning('No projects found to associate test monitor with');
             }
         } else {
             $this->logger->info("Test monitor for {$url} already exists");
@@ -152,31 +155,31 @@ class WebsiteMonitorSetupCommand
     {
         $monitors = $this->monitorService->findAll(1, 100);
         $this->logger->info('Found ' . count($monitors) . ' monitors to check');
-        
+
         $websiteMonitorsFound = false;
-        
+
         foreach ($monitors as $monitor) {
             if ($monitor->getType() === 'website') {
                 $websiteMonitorsFound = true;
-                
+
                 $this->logger->info("Testing monitor: {$monitor->getLabel()} (ID: {$monitor->getId()})");
-                $this->logger->info("URL: " . $monitor->getUrl());
-                $this->logger->info("Periodicity: " . $monitor->getPeriodicity() . " seconds");
-                
+                $this->logger->info('URL: ' . $monitor->getUrl());
+                $this->logger->info('Periodicity: ' . $monitor->getPeriodicity() . ' seconds');
+
                 // Perform a one-time check regardless of periodicity for initial validation
                 $status = $this->monitoringService->checkMonitor($monitor->getId());
-                
+
                 if ($status) {
-                    $statusText = $status->getStatus() ? "UP" : "DOWN";
+                    $statusText = $status->getStatus() ? 'UP' : 'DOWN';
                     $this->logger->info("Monitor {$monitor->getLabel()} status: {$statusText} (Response time: {$status->getResponseTime()}ms)");
                 } else {
                     $this->logger->error("Failed to check monitor {$monitor->getLabel()}");
                 }
             }
         }
-        
+
         if (!$websiteMonitorsFound) {
-            $this->logger->warning("No website monitors found in the system");
+            $this->logger->warning('No website monitors found in the system');
         }
     }
 
@@ -190,15 +193,15 @@ class WebsiteMonitorSetupCommand
             // The script runs in a loop for ~58 seconds, checking monitors according to their periodicity
             // This approach allows us to support monitors with sub-minute intervals (as low as 5 seconds)
             $cronContent = '* * * * * root cd /var/www && /usr/local/bin/php check_monitors.php >> /var/www/logs/cron.log 2>&1';
-            
+
             $cronFile = '/etc/cron.d/owleyes-cron';
-            
+
             // Direct method - no sudo needed in Docker container
             if (is_writable('/etc/cron.d') || is_writable($cronFile)) {
                 file_put_contents($cronFile, $cronContent . PHP_EOL); // Make sure we add a newline
                 chmod($cronFile, 0644);
                 exec('service cron restart', $output, $returnCode);
-                
+
                 if ($returnCode === 0) {
                     $this->logger->info('Cron job updated successfully to run continuous monitor checks');
                     $this->logger->info('Monitors will be checked according to their individual periodicity (5-300 seconds)');
@@ -214,4 +217,4 @@ class WebsiteMonitorSetupCommand
             $this->logger->warning('Error updating cron job: ' . $e->getMessage());
         }
     }
-} 
+}

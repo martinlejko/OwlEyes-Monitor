@@ -6,7 +6,7 @@ use Slim\Routing\RouteCollectorProxy;
 
 // API group
 $app->group('/api', function (RouteCollectorProxy $group) {
-    
+
     // Projects routes
     $group->group('/projects', function (RouteCollectorProxy $group) {
         $group->get('', 'Martinlejko\Backend\Controllers\ProjectController:getAllProjects');
@@ -15,7 +15,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->put('/{id}', 'Martinlejko\Backend\Controllers\ProjectController:updateProject');
         $group->delete('/{id}', 'Martinlejko\Backend\Controllers\ProjectController:deleteProject');
     });
-    
+
     // Monitors routes
     $group->group('/monitors', function (RouteCollectorProxy $group) {
         $group->get('', 'Martinlejko\Backend\Controllers\MonitorController:getAllMonitors');
@@ -40,5 +40,6 @@ $app->get('/api-docs/json', \Martinlejko\Backend\Controllers\ApiDocsController::
 // Home route - landing page
 $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write(file_get_contents(__DIR__ . '/../public/landing.html'));
+
     return $response;
-}); 
+});

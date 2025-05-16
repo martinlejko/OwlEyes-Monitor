@@ -2,14 +2,14 @@
 
 namespace Martinlejko\Backend\Tests\Integration;
 
-use Martinlejko\Backend\Services\MonitoringService;
 use Martinlejko\Backend\Models\Monitor;
 use Martinlejko\Backend\Models\MonitorStatus;
-use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
+use Martinlejko\Backend\Services\MonitoringService;
 use Martinlejko\Backend\Services\MonitorService;
 use Martinlejko\Backend\Services\MonitorStatusService;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 class PingMonitorTest extends TestCase
 {
@@ -24,7 +24,7 @@ class PingMonitorTest extends TestCase
         $monitorService = $this->createMock(MonitorService::class);
         /** @var MonitorStatusService|MockObject $statusService */
         $statusService = $this->createMock(MonitorStatusService::class);
-        $logger = new NullLogger();
+        $logger        = new NullLogger();
 
         // Initialize the MonitoringService with mocks
         $this->monitoringService = $this->getMockBuilder(MonitoringService::class)
@@ -60,4 +60,4 @@ class PingMonitorTest extends TestCase
         // Assert the response time is recorded
         $this->assertGreaterThan(0, $status->getResponseTime(), 'Response time should be greater than 0');
     }
-} 
+}

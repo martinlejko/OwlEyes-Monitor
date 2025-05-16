@@ -2,9 +2,9 @@
 
 namespace Martinlejko\Backend\Controllers;
 
+use OpenApi\Annotations as OA;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use OpenApi\Annotations as OA;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,8 +39,8 @@ class ApiDocsController
      */
     public function getApiDocs(Request $request, Response $response): Response
     {
-        $this->logger->info("API Docs requested");
-        
+        $this->logger->info('API Docs requested');
+
         // Use a static OpenAPI specification instead of dynamic generation
         $openApiJson = <<<JSON
 {
@@ -460,8 +460,9 @@ class ApiDocsController
     }
 }
 JSON;
-        
+
         $response->getBody()->write($openApiJson);
+
         return $response->withHeader('Content-Type', 'application/json');
     }
 
@@ -470,8 +471,8 @@ JSON;
      */
     public function getSwaggerUi(Request $request, Response $response): Response
     {
-        $this->logger->info("Swagger UI requested");
-        
+        $this->logger->info('Swagger UI requested');
+
         // Simple Swagger UI HTML
         $html = <<<HTML
 <!DOCTYPE html>
@@ -514,6 +515,7 @@ JSON;
 HTML;
 
         $response->getBody()->write($html);
+
         return $response->withHeader('Content-Type', 'text/html');
     }
-} 
+}

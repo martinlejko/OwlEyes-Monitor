@@ -62,6 +62,25 @@ docker exec -it owleyes-backend bash
 composer install
 ```
 
+#### PHP Linting & Formatting
+
+The backend uses [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) for linting and [PHP-CS-Fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer) for code formatting, both enforcing the PSR-12 standard.
+
+- **Check for linting issues:**
+  ```bash
+  php vendor/bin/phpcs --standard=PSR12 src tests check_monitors.php
+  ```
+- **Automatically fix fixable issues:**
+  ```bash
+  php vendor/bin/phpcbf --standard=PSR12 src tests check_monitors.php
+  ```
+- **Format code with PHP-CS-Fixer:**
+  ```bash
+  php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --allow-risky=yes
+  ```
+
+> All tools are installed via Composer and available in the backend container. The configuration for PHP-CS-Fixer is in `.php-cs-fixer.dist.php`.
+
 ### Frontend
 
 The frontend is built with React, TypeScript, and Material UI. It provides a user-friendly interface for managing projects and monitors.

@@ -62,8 +62,6 @@ const EditMonitor: React.FC = () => {
           } : {}),
           ...(monitorData.type === 'website' ? {
             url: (monitorData as any).url,
-            expectedStatusCode: (monitorData as any).expectedStatusCode,
-            expectedText: (monitorData as any).expectedText,
           } : {})
         });
         
@@ -328,34 +326,6 @@ const EditMonitor: React.FC = () => {
                   error={!!formErrors.url}
                   helperText={formErrors.url}
                   required
-                />
-              </Grid>
-              
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Expected Status Code"
-                  name="expectedStatusCode"
-                  value={formData.expectedStatusCode || ''}
-                  onChange={handleInputChange}
-                  error={!!formErrors.expectedStatusCode}
-                  helperText={formErrors.expectedStatusCode || 'Default: 200'}
-                  inputProps={{ min: 100, max: 599 }}
-                />
-              </Grid>
-              
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Expected Text"
-                  name="expectedText"
-                  value={formData.expectedText || ''}
-                  onChange={handleInputChange}
-                  error={!!formErrors.expectedText}
-                  helperText={formErrors.expectedText || 'Optional text that should be present in the response'}
-                  multiline
-                  rows={2}
                 />
               </Grid>
             </>

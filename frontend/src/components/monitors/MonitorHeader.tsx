@@ -63,15 +63,6 @@ export const MonitorHeader: React.FC<MonitorHeaderProps> = ({
           <Button 
             variant="outlined" 
             color="primary" 
-            startIcon={<QueryStatsIcon />}
-            onClick={() => window.open(`/monitors/${monitor.id}/statistics`, '_blank')}
-            sx={{ mr: 1 }}
-          >
-            View Statistics
-          </Button>
-          <Button 
-            variant="outlined" 
-            color="primary" 
             startIcon={<EditIcon />}
             onClick={onEdit}
             sx={{ mr: 1 }}

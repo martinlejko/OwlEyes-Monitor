@@ -42,5 +42,5 @@ jobs:
         run: composer install --no-interaction --prefer-dist
       - name: Run PHP_CodeSniffer
         run: vendor/bin/phpcs --standard=PSR12 src/
-      - name: Run PHP-CS-Fixer (dry run)
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff 
+      - name: Run PHP-CS-Fixer 
+        run: vendor/bin/php-cs-fixer fix 

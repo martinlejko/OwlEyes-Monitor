@@ -1,16 +1,16 @@
 import React from 'react';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Paper, 
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
   Link,
   Button,
   Card,
   CardContent,
   CardActions,
   Divider,
-  Stack
+  Stack,
 } from '@mui/material';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import ArticleIcon from '@mui/icons-material/Article';
@@ -23,20 +23,22 @@ const LandingPage: React.FC = () => {
 
   const features = [
     {
-      title: "Project Management",
-      description: "Organize your monitoring into logical projects with tags for easy filtering.",
-      icon: <ArticleIcon fontSize="large" color="primary" />
+      title: 'Project Management',
+      description: 'Organize your monitoring into logical projects with tags for easy filtering.',
+      icon: <ArticleIcon fontSize="large" color="primary" />,
     },
     {
-      title: "Multiple Monitor Types",
-      description: "Monitor websites, APIs, and services with various monitor types including ping and HTTP checks.",
-      icon: <MonitorHeartIcon fontSize="large" color="primary" />
+      title: 'Multiple Monitor Types',
+      description:
+        'Monitor websites, APIs, and services with various monitor types including ping and HTTP checks.',
+      icon: <MonitorHeartIcon fontSize="large" color="primary" />,
     },
     {
-      title: "Visualization & Alerts",
-      description: "View uptime statistics, response time graphs, and receive alerts when things go wrong.",
-      icon: <SettingsSuggestIcon fontSize="large" color="primary" />
-    }
+      title: 'Visualization & Alerts',
+      description:
+        'View uptime statistics, response time graphs, and receive alerts when things go wrong.',
+      icon: <SettingsSuggestIcon fontSize="large" color="primary" />,
+    },
   ];
 
   return (
@@ -44,7 +46,10 @@ const LandingPage: React.FC = () => {
       <Box sx={{ mt: 4, mb: 8 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
           <Typography variant="h2" component="h1" gutterBottom>
-            <span role="img" aria-label="owl">🦉</span> OwlEyes Monitor
+            <span role="img" aria-label="owl">
+              🦉
+            </span>{' '}
+            OwlEyes Monitor
           </Typography>
           <Typography variant="h5" color="text.secondary" paragraph>
             A comprehensive, open-source monitoring solution for your websites and services
@@ -55,16 +60,12 @@ const LandingPage: React.FC = () => {
             justifyContent="center"
             sx={{ mt: 4 }}
           >
-            <Button 
-              variant="contained" 
-              size="large" 
-              onClick={() => navigate('/')}
-            >
+            <Button variant="contained" size="large" onClick={() => navigate('/')}>
               Go to Dashboard
             </Button>
-            <Button 
-              variant="outlined" 
-              size="large" 
+            <Button
+              variant="outlined"
+              size="large"
               startIcon={<GitHubIcon />}
               component={Link}
               href="https://github.com/martinlejko/OwlEyes-Monitor"
@@ -80,13 +81,15 @@ const LandingPage: React.FC = () => {
             About the Project
           </Typography>
           <Typography variant="body1" paragraph>
-            OwlEyes Monitor is a powerful monitoring solution designed to help you keep track of your websites, APIs, and services.
-            With its intuitive interface and robust feature set, you can easily set up monitoring for all your critical systems and get
-            notified when something goes wrong.
+            OwlEyes Monitor is a powerful monitoring solution designed to help you keep track of
+            your websites, APIs, and services. With its intuitive interface and robust feature set,
+            you can easily set up monitoring for all your critical systems and get notified when
+            something goes wrong.
           </Typography>
           <Typography variant="body1">
-            This project is maintained as an open-source initiative and welcomes contributions from the community.
-            Whether you're looking to monitor a personal project or need a solution for your organization, OwlEyes has you covered.
+            This project is maintained as an open-source initiative and welcomes contributions from
+            the community. Whether you're looking to monitor a personal project or need a solution
+            for your organization, OwlEyes has you covered.
           </Typography>
         </Paper>
 
@@ -128,7 +131,8 @@ const LandingPage: React.FC = () => {
                     Create a Project
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Start by creating a project to organize your monitors. Add meaningful tags to filter them later.
+                    Start by creating a project to organize your monitors. Add meaningful tags to
+                    filter them later.
                   </Typography>
                 </CardContent>
                 <CardActions>
@@ -145,7 +149,8 @@ const LandingPage: React.FC = () => {
                     Add Monitors
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Add monitors to track your websites, APIs, and services. Configure alerts to know when things go wrong.
+                    Add monitors to track your websites, APIs, and services. Configure alerts to
+                    know when things go wrong.
                   </Typography>
                 </CardContent>
                 <CardActions>
@@ -163,15 +168,13 @@ const LandingPage: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             OwlEyes Monitor - Open Source Monitoring Solution
           </Typography>
-          <Link 
-            href="https://github.com/martinlejko/OwlEyes-Monitor" 
-            target="_blank" 
+          <Link
+            href="https://github.com/martinlejko/OwlEyes-Monitor"
+            target="_blank"
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1 }}
           >
             <GitHubIcon fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography variant="body2">
-              GitHub Repository
-            </Typography>
+            <Typography variant="body2">GitHub Repository</Typography>
           </Link>
         </Box>
       </Box>
@@ -179,4 +182,4 @@ const LandingPage: React.FC = () => {
   );
 };
 
-export default LandingPage; 
+export default LandingPage;

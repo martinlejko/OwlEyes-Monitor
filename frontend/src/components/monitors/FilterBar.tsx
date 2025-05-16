@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Box,
   Typography,
   Button,
@@ -10,12 +10,12 @@ import {
   TextField,
   SelectChangeEvent,
   Stack,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
-import { 
+import {
   Refresh as RefreshIcon,
   FilterAlt as FilterIcon,
-  RestartAlt as ResetIcon
+  RestartAlt as ResetIcon,
 } from '@mui/icons-material';
 
 interface FilterBarProps {
@@ -41,7 +41,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onDateChange,
   onRefresh,
   onResetFilters,
-  isRefreshing = false
+  isRefreshing = false,
 }) => {
   return (
     <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
@@ -52,7 +52,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             Filters:
           </Typography>
         </Box>
-        
+
         <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 220px' } }}>
           <FormControl size="small" fullWidth>
             <InputLabel id="status-filter-label">Status</InputLabel>
@@ -69,7 +69,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </Select>
           </FormControl>
         </Box>
-        
+
         <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 220px' } }}>
           <TextField
             name="dateFrom"
@@ -82,7 +82,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             fullWidth
           />
         </Box>
-        
+
         <Box sx={{ flex: { xs: '1 0 100%', sm: '1 0 220px' } }}>
           <TextField
             name="dateTo"
@@ -95,11 +95,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             fullWidth
           />
         </Box>
-        
+
         <Box>
           <Stack direction="row" spacing={1}>
-            <Button 
-              startIcon={isRefreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />}
+            <Button
+              startIcon={
+                isRefreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />
+              }
               onClick={onRefresh}
               variant="outlined"
               size="small"
@@ -108,14 +110,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             >
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
-            
-            <Button 
-              startIcon={<ResetIcon />} 
+
+            <Button
+              startIcon={<ResetIcon />}
               onClick={onResetFilters}
               variant="outlined"
               size="small"
               color="secondary"
-              disabled={!onResetFilters || (statusFilter === 'all' && !dateFrom && !dateTo) || isRefreshing}
+              disabled={
+                !onResetFilters || (statusFilter === 'all' && !dateFrom && !dateTo) || isRefreshing
+              }
             >
               Reset
             </Button>
@@ -124,4 +128,4 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </Box>
     </Box>
   );
-}; 
+};

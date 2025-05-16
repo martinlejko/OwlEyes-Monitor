@@ -16,25 +16,30 @@ interface CalendarViewProps {
  * Calendar view for monitoring history
  * Shows 3 months of data with color-coded days based on uptime/downtime
  */
-export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loading, monitorId }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({
+  data,
+  onRefresh,
+  loading,
+  monitorId,
+}) => {
   // Add local state to store data if parent component data is empty
   const [localData, setLocalData] = useState<CalendarDataPoint[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Fetch data directly if parent component didn't provide any and we have monitorId
   useEffect(() => {
     const fetchCalendarData = async () => {
       if ((data.length === 0 || error) && monitorId) {
         setLocalLoading(true);
         setError(null);
-        
+
         try {
           // First attempt: check if there's any data in the last year
           const today = new Date();
           const lastYear = new Date(today);
           lastYear.setFullYear(lastYear.getFullYear() - 1);
-          
+
           const response = await getMonitorStatuses(
             monitorId,
             1,
@@ -42,15 +47,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
             lastYear, // Look back one full year
             today,
             undefined,
-            'calendar'
+            'calendar',
           );
-          
+
           // Type assertion
           const calendarResponse = response as { data: CalendarDataPoint[] };
-          
+
           if (Array.isArray(calendarResponse.data)) {
             setLocalData(calendarResponse.data);
-            
+
             if (calendarResponse.data.length === 0) {
               setError('No data found for the last year. Try adjusting the date filters.');
             }
@@ -59,35 +64,35 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
           }
         } catch (error: any) {
           let errorMessage = 'Failed to load calendar data.';
-          
+
           if (error.response?.status === 500) {
             errorMessage = 'Server error processing calendar data. The error has been logged.';
           } else if (error.message) {
             errorMessage = error.message;
           }
-          
+
           setError(errorMessage);
         } finally {
           setLocalLoading(false);
         }
       }
     };
-    
+
     fetchCalendarData();
   }, [data.length, monitorId, error]);
-  
+
   // Use localData if we have it, otherwise use props data
   const displayData = localData.length > 0 ? localData : data;
   const isLoading = loading || localLoading;
-  
+
   const getMonthData = (month: Date) => {
     const startDate = format(startOfMonth(month), 'yyyy-MM-dd');
     const endDate = format(endOfMonth(month), 'yyyy-MM-dd');
-    
-    const filteredData = displayData.filter(point => 
-      point.date >= startDate && point.date <= endDate
+
+    const filteredData = displayData.filter(
+      (point) => point.date >= startDate && point.date <= endDate,
     );
-    
+
     return filteredData;
   };
 
@@ -99,39 +104,48 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
   const renderMonth = (month: Date) => {
     const monthName = format(month, 'MMMM yyyy');
     const monthData = getMonthData(month);
-    
+
     return (
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" gutterBottom>
           {monthName}
         </Typography>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(7, 1fr)', 
-          gap: 1 
-        }}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: 1,
+          }}
+        >
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
             <Box key={day} sx={{ textAlign: 'center', fontWeight: 'bold' }}>
               {day}
             </Box>
           ))}
-          
-          {Array.from({ length: new Date(month.getFullYear(), month.getMonth(), 1).getDay() }, (_, i) => (
-            <Box key={`empty-${i}`} />
-          ))}
-          
+
           {Array.from(
-            { length: new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate() }, 
+            { length: new Date(month.getFullYear(), month.getMonth(), 1).getDay() },
+            (_, i) => (
+              <Box key={`empty-${i}`} />
+            ),
+          )}
+
+          {Array.from(
+            { length: new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate() },
             (_, i) => {
               const day = i + 1;
-              const dateStr = format(new Date(month.getFullYear(), month.getMonth(), day), 'yyyy-MM-dd');
-              const dayData = monthData.find(d => d.date === dateStr);
-              
+              const dateStr = format(
+                new Date(month.getFullYear(), month.getMonth(), day),
+                'yyyy-MM-dd',
+              );
+              const dayData = monthData.find((d) => d.date === dateStr);
+
               let bgColor = '#eeeeee'; // Default gray for no data
               let statusText = 'No data';
-              
+
               if (dayData) {
-                if (dayData.total === 0) { // Check for no actual pings first
+                if (dayData.total === 0) {
+                  // Check for no actual pings first
                   bgColor = '#eeeeee'; // No data color
                   statusText = 'No data';
                 } else if (dayData.status === 'success') {
@@ -139,16 +153,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
                   statusText = '100% uptime';
                 } else if (dayData.status === 'warning') {
                   bgColor = '#ff9800'; // Orange for warning (≤ 5% failures)
-                  statusText = `${(dayData.failed / dayData.total * 100).toFixed(1)}% failures`;
+                  statusText = `${((dayData.failed / dayData.total) * 100).toFixed(1)}% failures`;
                 } else if (dayData.status === 'danger') {
                   bgColor = '#f44336'; // Red for danger (> 5% failures)
-                  statusText = `${(dayData.failed / dayData.total * 100).toFixed(1)}% failures`;
+                  statusText = `${((dayData.failed / dayData.total) * 100).toFixed(1)}% failures`;
                 }
               }
-              
+
               return (
                 <Tooltip key={day} title={statusText}>
-                  <Box 
+                  <Box
                     sx={{
                       height: '2rem',
                       display: 'flex',
@@ -160,14 +174,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
                       cursor: 'pointer',
                       '&:hover': {
                         opacity: 0.8,
-                      }
+                      },
                     }}
                   >
                     {day}
                   </Box>
                 </Tooltip>
               );
-            }
+            },
           )}
         </Box>
       </Box>
@@ -178,8 +192,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5">Calendar View</Typography>
-        <Button 
-          startIcon={<RefreshIcon />} 
+        <Button
+          startIcon={<RefreshIcon />}
           onClick={onRefresh}
           variant="outlined"
           disabled={isLoading}
@@ -187,13 +201,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
           Refresh
         </Button>
       </Box>
-      
+
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
         </Box>
       )}
-      
+
       {error && !isLoading && (
         <Paper sx={{ p: 3, mb: 3, bgcolor: '#ffebee' }}>
           <Typography color="error">{error}</Typography>
@@ -202,7 +216,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
           </Typography>
         </Paper>
       )}
-      
+
       {!isLoading && !error && displayData.length === 0 && (
         <Paper sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary">
@@ -210,7 +224,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
           </Typography>
         </Paper>
       )}
-      
+
       {!isLoading && displayData.length > 0 && (
         <Paper sx={{ p: 3 }}>
           <Typography variant="body2" paragraph>
@@ -234,7 +248,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
               </Box>
             </Box>
           </Typography>
-          
+
           {renderMonth(currentMonth)}
           {renderMonth(prevMonth)}
           {renderMonth(prevPrevMonth)}
@@ -242,4 +256,4 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ data, onRefresh, loa
       )}
     </Box>
   );
-}; 
+};

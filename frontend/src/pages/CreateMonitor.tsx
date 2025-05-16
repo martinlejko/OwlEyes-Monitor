@@ -17,14 +17,14 @@ import {
   Container,
   Stack,
   IconButton,
-  SelectChangeEvent
+  SelectChangeEvent,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   NetworkPing as PingIcon,
   Link as WebsiteIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { createMonitor, getProjects } from '../services/api';
 import { Project, Monitor, PingMonitor, WebsiteMonitor } from '../types';
@@ -33,7 +33,7 @@ const CreateMonitor: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId');
-  
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ const CreateMonitor: React.FC = () => {
     // Website specific fields
     url: '',
     checkStatus: false,
-    keywords: []
+    keywords: [],
   });
 
   // Fetch projects for the dropdown
@@ -68,85 +68,85 @@ const CreateMonitor: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProjects();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     // Convert numeric fields
     if (name === 'periodicity' || name === 'port') {
       const numValue = value === '' ? null : parseInt(value);
       setFormData({
         ...formData,
-        [name]: numValue
+        [name]: numValue,
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
-    
+
     // Clear error when user types
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
-        [name]: ''
+        [name]: '',
       });
     }
   };
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
-    
+
     // For projectId, convert to number
     if (name === 'projectId') {
       setFormData({
         ...formData,
-        [name]: value ? parseInt(value) : undefined
+        [name]: value ? parseInt(value) : undefined,
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
-    
+
     // Clear error when user selects
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
-        [name]: ''
+        [name]: '',
       });
     }
   };
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.label || formData.label.trim() === '') {
       errors.label = 'Monitor name is required';
     }
-    
+
     if (!formData.badgeLabel || formData.badgeLabel.trim() === '') {
       errors.badgeLabel = 'Badge label is required';
     }
-    
+
     if (!formData.projectId) {
       errors.projectId = 'Project is required';
     }
-    
+
     if (!formData.periodicity || formData.periodicity < 10) {
       errors.periodicity = 'Check interval must be at least 10 seconds';
     }
-    
+
     if (formData.type === 'ping') {
       if (!formData.host || formData.host.trim() === '') {
         errors.host = 'Host is required';
       }
-      
+
       if (formData.port !== null && (formData.port < 1 || formData.port > 65535)) {
         errors.port = 'Port must be between 1 and 65535';
       }
@@ -157,22 +157,22 @@ const CreateMonitor: React.FC = () => {
         errors.url = 'URL must start with http:// or https://';
       }
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       // Create type-specific monitor data
       if (formData.type === 'ping') {
         // For ping monitors, ensure port is numeric (required by backend)
@@ -183,9 +183,9 @@ const CreateMonitor: React.FC = () => {
           type: 'ping',
           projectId: formData.projectId,
           host: formData.host.trim(),
-          port: formData.port !== null ? formData.port : 0
+          port: formData.port !== null ? formData.port : 0,
         };
-        
+
         console.log('Creating ping monitor with data:', pingMonitorData);
         try {
           const newMonitor = await createMonitor(pingMonitorData);
@@ -210,9 +210,9 @@ const CreateMonitor: React.FC = () => {
           projectId: formData.projectId,
           url: formData.url.trim(),
           checkStatus: Boolean(formData.checkStatus),
-          keywords: Array.isArray(formData.keywords) ? formData.keywords : []
+          keywords: Array.isArray(formData.keywords) ? formData.keywords : [],
         };
-        
+
         console.log('Creating website monitor with data:', websiteMonitorData);
         try {
           const newMonitor = await createMonitor(websiteMonitorData);
@@ -237,14 +237,11 @@ const CreateMonitor: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
-        <Stack 
-          direction="row" 
-          alignItems="center" 
-          spacing={1} 
-          sx={{ mb: 3 }}
-        >
-          <IconButton 
+      <Paper
+        sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
+          <IconButton
             onClick={() => navigate('/monitors')}
             aria-label="back to monitors"
             sx={{ mr: 1 }}
@@ -255,15 +252,15 @@ const CreateMonitor: React.FC = () => {
             Create New Monitor
           </Typography>
         </Stack>
-        
+
         {loading && <LinearProgress sx={{ mb: 2 }} />}
-        
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        
+
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -280,7 +277,7 @@ const CreateMonitor: React.FC = () => {
                 autoFocus
               />
             </Grid>
-            
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
@@ -294,7 +291,7 @@ const CreateMonitor: React.FC = () => {
                 disabled={saving}
               />
             </Grid>
-            
+
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth error={!!formErrors.projectId}>
                 <InputLabel id="project-label">Project</InputLabel>
@@ -305,7 +302,7 @@ const CreateMonitor: React.FC = () => {
                   value={formData.projectId?.toString() || ''}
                   label="Project"
                   onChange={handleSelectChange}
-                  disabled={saving || (projectId !== null)}
+                  disabled={saving || projectId !== null}
                   required
                 >
                   {projects.map((project) => (
@@ -317,7 +314,7 @@ const CreateMonitor: React.FC = () => {
                 {formErrors.projectId && <FormHelperText>{formErrors.projectId}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel id="type-label">Monitor Type</InputLabel>
@@ -331,22 +328,24 @@ const CreateMonitor: React.FC = () => {
                   disabled={saving}
                   required
                   startAdornment={
-                    formData.type === 'ping' ? 
-                      <PingIcon sx={{ ml: 1, mr: 1, color: 'text.secondary' }} /> : 
+                    formData.type === 'ping' ? (
+                      <PingIcon sx={{ ml: 1, mr: 1, color: 'text.secondary' }} />
+                    ) : (
                       <WebsiteIcon sx={{ ml: 1, mr: 1, color: 'text.secondary' }} />
+                    )
                   }
                 >
                   <MenuItem value="ping">Ping Monitor</MenuItem>
                   <MenuItem value="website">Website Monitor</MenuItem>
                 </Select>
                 <FormHelperText>
-                  {formData.type === 'ping' ? 
-                    'Checks if host is reachable via ICMP ping' : 
-                    'Checks if website returns expected status code'}
+                  {formData.type === 'ping'
+                    ? 'Checks if host is reachable via ICMP ping'
+                    : 'Checks if website returns expected status code'}
                 </FormHelperText>
               </FormControl>
             </Grid>
-            
+
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -362,7 +361,7 @@ const CreateMonitor: React.FC = () => {
                 disabled={saving}
               />
             </Grid>
-            
+
             {/* Type-specific fields */}
             {formData.type === 'ping' && (
               <>
@@ -379,7 +378,7 @@ const CreateMonitor: React.FC = () => {
                     disabled={saving}
                   />
                 </Grid>
-                
+
                 <Grid size={{ xs: 12, md: 4 }}>
                   <TextField
                     fullWidth
@@ -396,7 +395,7 @@ const CreateMonitor: React.FC = () => {
                 </Grid>
               </>
             )}
-            
+
             {formData.type === 'website' && (
               <Grid size={{ xs: 12 }}>
                 <TextField
@@ -413,7 +412,7 @@ const CreateMonitor: React.FC = () => {
                 />
               </Grid>
             )}
-            
+
             <Grid size={{ xs: 12 }} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 type="button"
@@ -442,4 +441,4 @@ const CreateMonitor: React.FC = () => {
   );
 };
 
-export default CreateMonitor; 
+export default CreateMonitor;

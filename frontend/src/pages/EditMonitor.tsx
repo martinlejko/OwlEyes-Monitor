@@ -18,12 +18,9 @@ import {
   Grid,
   Paper,
   Stack,
-  SelectChangeEvent
+  SelectChangeEvent,
 } from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Save as SaveIcon
-} from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { getMonitor, updateMonitor } from '../services/api';
 import { Monitor } from '../types';
 
@@ -38,17 +35,17 @@ const EditMonitor: React.FC = () => {
     label: '',
     type: 'ping',
     badgeLabel: '',
-    periodicity: 60
+    periodicity: 60,
   });
 
   useEffect(() => {
     const fetchMonitor = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         const monitorData = await getMonitor(parseInt(id));
         setFormData({
           label: monitorData.label,
@@ -56,15 +53,19 @@ const EditMonitor: React.FC = () => {
           badgeLabel: monitorData.badgeLabel,
           periodicity: monitorData.periodicity,
           // Add type-specific fields based on the monitor type
-          ...(monitorData.type === 'ping' ? {
-            host: (monitorData as any).host,
-            port: (monitorData as any).port,
-          } : {}),
-          ...(monitorData.type === 'website' ? {
-            url: (monitorData as any).url,
-          } : {})
+          ...(monitorData.type === 'ping'
+            ? {
+                host: (monitorData as any).host,
+                port: (monitorData as any).port,
+              }
+            : {}),
+          ...(monitorData.type === 'website'
+            ? {
+                url: (monitorData as any).url,
+              }
+            : {}),
         });
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching monitor details:', err);
@@ -72,7 +73,7 @@ const EditMonitor: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     fetchMonitor();
   }, [id]);
 
@@ -80,7 +81,7 @@ const EditMonitor: React.FC = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -88,25 +89,25 @@ const EditMonitor: React.FC = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.label || formData.label.trim() === '') {
       errors.label = 'Label is required';
     }
-    
+
     if (!formData.badgeLabel || formData.badgeLabel.trim() === '') {
       errors.badgeLabel = 'Badge label is required';
     }
-    
+
     if (!formData.periodicity || formData.periodicity < 10) {
       errors.periodicity = 'Periodicity must be at least 10 seconds';
     }
-    
+
     if (formData.type === 'ping') {
       if (!formData.host || formData.host.trim() === '') {
         errors.host = 'Host is required';
@@ -118,31 +119,31 @@ const EditMonitor: React.FC = () => {
         errors.url = 'URL must start with http:// or https://';
       }
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     if (!id) return;
-    
+
     try {
       setSaving(true);
-      
+
       // Create a complete update object with all required fields
       const updateData: Record<string, any> = {
         label: formData.label,
         badgeLabel: formData.badgeLabel,
         periodicity: parseInt((formData.periodicity || 60).toString()), // Use 60 as fallback
-        type: formData.type // Explicitly include the type
+        type: formData.type, // Explicitly include the type
       };
-      
+
       // Add type-specific fields
       if (formData.type === 'ping') {
         // For ping monitors
@@ -161,9 +162,9 @@ const EditMonitor: React.FC = () => {
         updateData.host = null;
         updateData.port = null;
       }
-      
+
       console.log('Updating monitor with data:', updateData);
-      
+
       try {
         const updatedMonitor = await updateMonitor(parseInt(id), updateData);
         console.log('Update successful:', updatedMonitor);
@@ -196,11 +197,7 @@ const EditMonitor: React.FC = () => {
     return (
       <Box>
         <Alert severity="error">{error}</Alert>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate(-1)} 
-          sx={{ mt: 2 }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
           Go Back
         </Button>
       </Box>
@@ -210,18 +207,15 @@ const EditMonitor: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate(`/monitors/${id}`)}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/monitors/${id}`)}>
           Back to Monitor
         </Button>
         <Typography variant="h4">Edit Monitor</Typography>
       </Box>
-      
+
       <Paper component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
         {saving && <LinearProgress sx={{ mb: 2 }} />}
-        
+
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
@@ -235,7 +229,7 @@ const EditMonitor: React.FC = () => {
               required
             />
           </Grid>
-          
+
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
@@ -248,7 +242,7 @@ const EditMonitor: React.FC = () => {
               required
             />
           </Grid>
-          
+
           <Grid size={{ xs: 12, md: 6 }}>
             <FormControl fullWidth>
               <InputLabel id="type-label">Type</InputLabel>
@@ -267,7 +261,7 @@ const EditMonitor: React.FC = () => {
               <FormHelperText>Monitor type cannot be changed</FormHelperText>
             </FormControl>
           </Grid>
-          
+
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
@@ -282,7 +276,7 @@ const EditMonitor: React.FC = () => {
               inputProps={{ min: 10 }}
             />
           </Grid>
-          
+
           {formData.type === 'ping' && (
             <>
               <Grid size={{ xs: 12, md: 8 }}>
@@ -297,7 +291,7 @@ const EditMonitor: React.FC = () => {
                   required
                 />
               </Grid>
-              
+
               <Grid size={{ xs: 12, md: 4 }}>
                 <TextField
                   fullWidth
@@ -313,7 +307,7 @@ const EditMonitor: React.FC = () => {
               </Grid>
             </>
           )}
-          
+
           {formData.type === 'website' && (
             <>
               <Grid size={{ xs: 12 }}>
@@ -331,7 +325,7 @@ const EditMonitor: React.FC = () => {
             </>
           )}
         </Grid>
-        
+
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             variant="contained"
@@ -348,4 +342,4 @@ const EditMonitor: React.FC = () => {
   );
 };
 
-export default EditMonitor; 
+export default EditMonitor;

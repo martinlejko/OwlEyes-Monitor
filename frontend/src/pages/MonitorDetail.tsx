@@ -1,24 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  LinearProgress,
-  Alert,
-  Button,
-  Paper,
-  Tab,
-  Tabs
-} from '@mui/material';
+import { Box, Typography, LinearProgress, Alert, Button, Paper, Tab, Tabs } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   List as ListIcon,
   CalendarMonth as CalendarIcon,
-  ShowChart as ChartIcon
+  ShowChart as ChartIcon,
 } from '@mui/icons-material';
 import { subMonths, startOfMonth } from 'date-fns';
 import { getMonitor, getMonitorStatuses, deleteMonitor } from '../services/api';
-import { Monitor, MonitorStatus, PaginatedResponse, CalendarDataPoint, GraphDataPoint } from '../types';
+import {
+  Monitor,
+  MonitorStatus,
+  PaginatedResponse,
+  CalendarDataPoint,
+  GraphDataPoint,
+} from '../types';
 
 // Import our modular components
 import {
@@ -29,43 +26,43 @@ import {
   MonitorHeader,
   BadgeSection,
   FilterBar,
-  DeleteDialog
+  DeleteDialog,
 } from '../components/monitors';
 
 const MonitorDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   // States for monitor data and loading
   const [monitor, setMonitor] = useState<Monitor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // States for status list view
   const [statuses, setStatuses] = useState<MonitorStatus[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalStatusCount, setTotalStatusCount] = useState(0);
-  
+
   // States for calendar view
   const [calendarData, setCalendarData] = useState<CalendarDataPoint[]>([]);
-  
+
   // States for graph view
   const [graphData, setGraphData] = useState<GraphDataPoint[]>([]);
-  
+
   // States for tab navigation
   const [tabValue, setTabValue] = useState(0);
-  
+
   // States for delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  
+
   // States for status filtering
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
-  
+
   // Ref for auto-update interval
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -75,7 +72,7 @@ const MonitorDetail: React.FC = () => {
   const fetchMonitor = async () => {
     try {
       if (!id) return;
-      
+
       const monitorData = await getMonitor(parseInt(id));
       setMonitor(monitorData);
     } catch (err: any) {
@@ -87,103 +84,105 @@ const MonitorDetail: React.FC = () => {
   const fetchStatusData = async (viewMode = tabValue) => {
     try {
       if (!id) return;
-      
+
       const monitorId = parseInt(id);
       let from: Date | undefined = undefined;
       let to: Date | undefined = undefined;
       let statusFilterValue: boolean | undefined = undefined;
-      
+
       // Handle filters - only apply for list view
       if (viewMode === 0) {
         if (dateFrom) {
           from = new Date(dateFrom);
         }
-        
+
         if (dateTo) {
           to = new Date(dateTo);
           // Set time to end of day
           to.setHours(23, 59, 59, 999);
         }
-        
+
         if (statusFilter === 'up') {
           statusFilterValue = true;
         } else if (statusFilter === 'down') {
           statusFilterValue = false;
         }
       }
-      
-      console.log(`Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`);
-      
+
+      console.log(
+        `Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`,
+      );
+
       // Fetch data based on view mode - preserving the current state
       const currentViewMode = viewMode; // Ensure we use the passed viewMode
-      
-      if (currentViewMode === 0) { // List view
+
+      if (currentViewMode === 0) {
+        // List view
         const response = await getMonitorStatuses(
-          monitorId, 
-          page + 1, 
-          rowsPerPage, 
-          from, 
-          to, 
+          monitorId,
+          page + 1,
+          rowsPerPage,
+          from,
+          to,
           statusFilterValue,
-          'list'
+          'list',
         );
-        
+
         // Type assertion since we know the structure based on view
         const listResponse = response as PaginatedResponse<MonitorStatus>;
         setStatuses(listResponse.data);
         setTotalStatusCount(listResponse.meta.total);
-        
-      } else if (currentViewMode === 1) { // Calendar view
+      } else if (currentViewMode === 1) {
+        // Calendar view
         // For calendar view, always use a fixed 3-month range and don't apply filters
         const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
         const toDate = new Date(); // To today
-        
+
         const response = await getMonitorStatuses(
-          monitorId, 
-          1, 
+          monitorId,
+          1,
           1000, // Large enough to ensure we get all needed data
           fromDate,
           toDate,
           undefined, // Don't use status filter for calendar view
-          'calendar'
+          'calendar',
         );
-        
+
         // Type assertion
         const calendarResponse = response as { data: CalendarDataPoint[] };
         setCalendarData(calendarResponse.data);
-        
-      } else if (currentViewMode === 2) { // Graph view
+      } else if (currentViewMode === 2) {
+        // Graph view
         // For graph view, always use a fixed 1-month range and don't apply filters
         const fromDate = subMonths(new Date(), 1);
         const toDate = new Date();
-        
+
         const response = await getMonitorStatuses(
-          monitorId, 
-          1, 
-          100, 
+          monitorId,
+          1,
+          100,
           fromDate,
           toDate,
           undefined, // Don't use status filter for graph view
-          'graph'
+          'graph',
         );
-        
+
         // Type assertion
         const graphResponse = response as { data: GraphDataPoint[] };
         setGraphData(graphResponse.data);
       }
-      
+
       // Only set loading to false once all operations complete
       setLoading(false);
-      
+
       // Log successful completion with preserved filter values
       console.log('Status data fetch complete with preserved filters:', {
         viewMode: currentViewMode,
         statusFilter,
         dateFrom,
         dateTo,
-        page
+        page,
       });
-      
     } catch (err: any) {
       console.error('Error fetching status data:', err);
       setError(err.message || 'Failed to load status data');
@@ -194,10 +193,10 @@ const MonitorDetail: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     setError(null);
-    
+
     // First fetch the monitor data
     await fetchMonitor();
-    
+
     // Then fetch status data with current filters preserved
     const currentTabValue = tabValue;
     console.log('Initial data fetch with preserved filters:', {
@@ -205,21 +204,21 @@ const MonitorDetail: React.FC = () => {
       statusFilter,
       dateFrom,
       dateTo,
-      page
+      page,
     });
-    
+
     await fetchStatusData(currentTabValue);
   };
 
   // Initialize data
   useEffect(() => {
     fetchData();
-    
+
     // Set up live updates with a reference to the current state values
     updateIntervalRef.current = setInterval(() => {
       // Only refresh monitor data without refreshing status data if filters are applied
       fetchMonitor();
-      
+
       // Create a closure to capture the current filter state values
       const capturedTabValue = tabValue;
       const capturedStatusFilter = statusFilter;
@@ -227,19 +226,19 @@ const MonitorDetail: React.FC = () => {
       const capturedDateTo = dateTo;
       const capturedPage = page;
       const capturedRowsPerPage = rowsPerPage;
-      
+
       console.log('Auto-refresh with preserved filters:', {
         tabValue: capturedTabValue,
         statusFilter: capturedStatusFilter,
         dateFrom: capturedDateFrom,
         dateTo: capturedDateTo,
-        page: capturedPage
+        page: capturedPage,
       });
-      
+
       // Pass all current state to ensure filters are preserved
       fetchStatusData(capturedTabValue);
     }, 5000); // 5 seconds update interval
-    
+
     return () => {
       // Clean up interval on component unmount
       if (updateIntervalRef.current) {
@@ -247,7 +246,7 @@ const MonitorDetail: React.FC = () => {
       }
     };
   }, [id]);
-  
+
   // Fetch data when filters or pagination change
   useEffect(() => {
     // Skip on initial render as fetchData will handle it
@@ -258,7 +257,7 @@ const MonitorDetail: React.FC = () => {
         statusFilter,
         dateFrom,
         dateTo,
-        page
+        page,
       });
       fetchStatusData(tabValue);
     }
@@ -272,16 +271,16 @@ const MonitorDetail: React.FC = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  
+
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
-  
+
   const handleStatusFilterChange = (event: any) => {
     setStatusFilter(event.target.value);
     setPage(0); // Reset to first page on filter change
   };
-  
+
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     if (name === 'dateFrom') {
@@ -291,24 +290,24 @@ const MonitorDetail: React.FC = () => {
     }
     setPage(0); // Reset to first page on filter change
   };
-  
+
   const handleRefresh = async () => {
     // Set refreshing state to true to show loading indicator
     setRefreshing(true);
-    
+
     // Create local variables to ensure current state is used
     const currentTabValue = tabValue;
     const currentStatusFilter = statusFilter;
     const currentDateFrom = dateFrom;
     const currentDateTo = dateTo;
-    
+
     console.log('Manual refresh with filters:', {
       tabValue: currentTabValue,
       statusFilter: currentStatusFilter,
       dateFrom: currentDateFrom,
-      dateTo: currentDateTo
+      dateTo: currentDateTo,
     });
-    
+
     try {
       // Explicitly call fetchStatusData with current tabValue and preserve all filters
       await fetchStatusData(currentTabValue);
@@ -326,17 +325,17 @@ const MonitorDetail: React.FC = () => {
 
   const handleResetFilters = async () => {
     console.log('Resetting all filters to default values');
-    
+
     // Show loading indicator
     setRefreshing(true);
-    
+
     // Reset filter states to their defaults
     setStatusFilter('all');
     setDateFrom('');
     setDateTo('');
     // Also reset to the first page
     setPage(0);
-    
+
     try {
       // Fetch data with the reset filters
       console.log('Fetching data with reset filters');
@@ -365,23 +364,26 @@ const MonitorDetail: React.FC = () => {
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
-      
+
       if (id) {
         console.log('Confirming deletion of monitor ID:', id);
-        
+
         const timestamp = new Date().getTime();
         console.log('Using timestamp for cache busting:', timestamp);
-        
+
         await deleteMonitor(parseInt(id));
         console.log('Delete operation completed successfully');
-        
+
         setDeleteDialogOpen(false);
-        
+
         // After successful deletion, navigate back to project or dashboard
         if (monitor?.projectId) {
           const projectId = monitor.projectId;
-          console.log('Navigating to project page with cache buster:', `/projects/${projectId}?_=${timestamp}`);
-          
+          console.log(
+            'Navigating to project page with cache buster:',
+            `/projects/${projectId}?_=${timestamp}`,
+          );
+
           // Use React Router navigation instead of direct location change
           navigate(`/projects/${projectId}?_=${timestamp}`);
         } else {
@@ -398,7 +400,8 @@ const MonitorDetail: React.FC = () => {
           displayErrorMessage = error.response.data.error;
         } else {
           // Response data is not in the expected format, or no specific error message from backend
-          displayErrorMessage = `Server error: ${error.response.status} ${error.response.statusText || ''}`.trim();
+          displayErrorMessage =
+            `Server error: ${error.response.status} ${error.response.statusText || ''}`.trim();
         }
       } else if (error.isAxiosError && error.request) {
         // The request was made but no response was received
@@ -440,11 +443,7 @@ const MonitorDetail: React.FC = () => {
     return (
       <Box>
         <Alert severity="error">{error}</Alert>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate(-1)} 
-          sx={{ mt: 2 }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
           Go Back
         </Button>
       </Box>
@@ -455,11 +454,7 @@ const MonitorDetail: React.FC = () => {
     return (
       <Box>
         <Alert severity="warning">Monitor not found</Alert>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate(-1)} 
-          sx={{ mt: 2 }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
           Go Back
         </Button>
       </Box>
@@ -469,52 +464,52 @@ const MonitorDetail: React.FC = () => {
   return (
     <Box>
       {/* Monitor header with actions */}
-      <MonitorHeader 
+      <MonitorHeader
         monitor={monitor}
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
         onBack={handleGoBack}
       />
-      
+
       {/* Monitor history section */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom>
           Monitor History
         </Typography>
-        
+
         <Paper sx={{ width: '100%' }}>
           {/* Tab navigation */}
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs 
-              value={tabValue} 
-              onChange={handleTabChange} 
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
               aria-label="monitor views"
               variant="fullWidth"
             >
-              <Tab 
-                icon={<ListIcon />} 
-                label="List View" 
-                id="monitor-tab-0" 
-                aria-controls="monitor-tabpanel-0" 
+              <Tab
+                icon={<ListIcon />}
+                label="List View"
+                id="monitor-tab-0"
+                aria-controls="monitor-tabpanel-0"
               />
-              <Tab 
-                icon={<CalendarIcon />} 
-                label="Calendar View" 
-                id="monitor-tab-1" 
-                aria-controls="monitor-tabpanel-1" 
+              <Tab
+                icon={<CalendarIcon />}
+                label="Calendar View"
+                id="monitor-tab-1"
+                aria-controls="monitor-tabpanel-1"
               />
-              <Tab 
-                icon={<ChartIcon />} 
-                label="Graph View" 
-                id="monitor-tab-2" 
-                aria-controls="monitor-tabpanel-2" 
+              <Tab
+                icon={<ChartIcon />}
+                label="Graph View"
+                id="monitor-tab-2"
+                aria-controls="monitor-tabpanel-2"
               />
             </Tabs>
           </Box>
-          
+
           {/* Filters - only show for List view */}
           {tabValue === 0 && (
-            <FilterBar 
+            <FilterBar
               statusFilter={statusFilter}
               dateFrom={dateFrom}
               dateTo={dateTo}
@@ -525,10 +520,10 @@ const MonitorDetail: React.FC = () => {
               isRefreshing={refreshing}
             />
           )}
-          
+
           {/* List View */}
           <TabPanel value={tabValue} index={0}>
-            <ListView 
+            <ListView
               statuses={statuses}
               totalCount={totalStatusCount}
               page={page}
@@ -538,36 +533,29 @@ const MonitorDetail: React.FC = () => {
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </TabPanel>
-          
+
           {/* Calendar View */}
           <TabPanel value={tabValue} index={1}>
-            <CalendarView 
-              data={calendarData} 
-              onRefresh={handleRefresh} 
+            <CalendarView
+              data={calendarData}
+              onRefresh={handleRefresh}
               loading={loading}
               monitorId={monitor.id}
             />
           </TabPanel>
-          
+
           {/* Graph View */}
           <TabPanel value={tabValue} index={2}>
-            <GraphView 
-              data={graphData} 
-              onRefresh={handleRefresh}
-              loading={loading}
-            />
+            <GraphView data={graphData} onRefresh={handleRefresh} loading={loading} />
           </TabPanel>
         </Paper>
       </Box>
-      
+
       {/* Badge section */}
-      <BadgeSection 
-        monitorId={monitor.id} 
-        badgeLabel={monitor.badgeLabel}
-      />
+      <BadgeSection monitorId={monitor.id} badgeLabel={monitor.badgeLabel} />
 
       {/* Delete Confirmation Dialog */}
-      <DeleteDialog 
+      <DeleteDialog
         open={deleteDialogOpen}
         title="Delete Monitor"
         message="Are you sure you want to delete this monitor? This action cannot be undone. All status history for this monitor will also be deleted."

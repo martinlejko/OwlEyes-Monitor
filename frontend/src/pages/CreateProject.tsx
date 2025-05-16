@@ -12,14 +12,14 @@ import {
   Alert,
   Stack,
   Chip,
-  IconButton
+  IconButton,
 } from '@mui/material';
-import { 
-  FolderOpen as FolderIcon, 
-  Add as AddIcon, 
+import {
+  FolderOpen as FolderIcon,
+  Add as AddIcon,
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
-  Close as CloseIcon 
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { createProject } from '../services/api';
 
@@ -28,35 +28,35 @@ const CreateProject: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     label: '',
     description: '',
-    tags: [] as string[]
+    tags: [] as string[],
   });
-  
+
   // New tag input state
   const [newTag, setNewTag] = useState('');
-  
+
   // Form validation errors
   const [formErrors, setFormErrors] = useState({
     label: '',
-    description: ''
+    description: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
-    
+
     // Clear error when user types
     if (formErrors[name as keyof typeof formErrors]) {
       setFormErrors({
         ...formErrors,
-        [name]: ''
+        [name]: '',
       });
     }
   };
@@ -65,7 +65,7 @@ const CreateProject: React.FC = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData({
         ...formData,
-        tags: [...formData.tags, newTag.trim()]
+        tags: [...formData.tags, newTag.trim()],
       });
       setNewTag('');
     }
@@ -74,7 +74,7 @@ const CreateProject: React.FC = () => {
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData({
       ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
+      tags: formData.tags.filter((tag) => tag !== tagToRemove),
     });
   };
 
@@ -88,49 +88,49 @@ const CreateProject: React.FC = () => {
   const validateForm = (): boolean => {
     const errors = {
       label: '',
-      description: ''
+      description: '',
     };
-    
+
     let isValid = true;
-    
+
     if (!formData.label.trim()) {
       errors.label = 'Project name is required';
       isValid = false;
     }
-    
+
     if (formData.label.length > 100) {
       errors.label = 'Project name must be less than 100 characters';
       isValid = false;
     }
-    
+
     if (formData.description.length > 500) {
       errors.description = 'Description must be less than 500 characters';
       isValid = false;
     }
-    
+
     setFormErrors(errors);
     return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const newProject = await createProject({
         label: formData.label.trim(),
         description: formData.description.trim(),
-        tags: formData.tags
+        tags: formData.tags,
       });
-      
+
       setSuccess(true);
-      
+
       // Redirect to the newly created project after a short delay
       setTimeout(() => {
         navigate(`/projects/${newProject.id}`);
@@ -145,14 +145,11 @@ const CreateProject: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
-        <Stack 
-          direction="row" 
-          alignItems="center" 
-          spacing={1} 
-          sx={{ mb: 3 }}
-        >
-          <IconButton 
+      <Paper
+        sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
+          <IconButton
             onClick={() => navigate('/projects')}
             aria-label="back to projects"
             sx={{ mr: 1 }}
@@ -164,21 +161,21 @@ const CreateProject: React.FC = () => {
             Create New Project
           </Typography>
         </Stack>
-        
+
         {loading && <LinearProgress sx={{ mb: 2 }} />}
-        
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        
+
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Project created successfully! Redirecting...
           </Alert>
         )}
-        
+
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
@@ -196,7 +193,7 @@ const CreateProject: React.FC = () => {
                 autoFocus
               />
             </Grid>
-            
+
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -212,12 +209,12 @@ const CreateProject: React.FC = () => {
                 rows={4}
               />
             </Grid>
-            
+
             <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
                 Tags
               </Typography>
-              
+
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                 {formData.tags.map((tag, index) => (
                   <Chip
@@ -230,7 +227,7 @@ const CreateProject: React.FC = () => {
                   />
                 ))}
               </Box>
-              
+
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <TextField
                   id="newTag"
@@ -253,7 +250,7 @@ const CreateProject: React.FC = () => {
                 </Button>
               </Box>
             </Grid>
-            
+
             <Grid size={{ xs: 12 }} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 type="button"
@@ -282,4 +279,4 @@ const CreateProject: React.FC = () => {
   );
 };
 
-export default CreateProject; 
+export default CreateProject;

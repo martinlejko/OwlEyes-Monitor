@@ -32,9 +32,17 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
 } from '@mui/material';
-import { Add as AddIcon, FolderOpen as FolderIcon, Visibility as VisibilityIcon, Edit as EditIcon, SortByAlpha as SortIcon, FilterList as FilterIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  FolderOpen as FolderIcon,
+  Visibility as VisibilityIcon,
+  Edit as EditIcon,
+  SortByAlpha as SortIcon,
+  FilterList as FilterIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import { getProjects, deleteProject, FilterParams } from '../services/api';
 import { Project } from '../types';
 
@@ -46,7 +54,7 @@ const ProjectsPage: React.FC = () => {
   const [page, setPage] = useState(0); // 0-indexed for MUI TablePagination
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalProjects, setTotalProjects] = useState(0);
-  
+
   // Filter and sort states
   const [labelFilter, setLabelFilter] = useState('');
   const [debouncedLabelFilter, setDebouncedLabelFilter] = useState('');
@@ -97,17 +105,17 @@ const ProjectsPage: React.FC = () => {
         labelFilter: debouncedLabelFilter,
         tags: selectedTags,
         sortBy: 'label',
-        sortDirection
+        sortDirection,
       };
-      
+
       const response = await getProjects(page + 1, rowsPerPage, filterParams);
       setProjects(response.data);
       setTotalProjects(response.meta.total);
-      
+
       // Extract all unique tags from projects for the filter dropdown
       if (response.data.length > 0 && availableTags.length === 0) {
         const allTags = response.data
-          .flatMap(project => project.tags || [])
+          .flatMap((project) => project.tags || [])
           .filter((tag, index, self) => tag && self.indexOf(tag) === index);
         setAvailableTags(allTags);
       }
@@ -135,7 +143,7 @@ const ProjectsPage: React.FC = () => {
   const handleViewProject = (projectId: number) => {
     navigate(`/projects/${projectId}`);
   };
-  
+
   const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Prevent default behavior that might cause page refreshes
     event.preventDefault();
@@ -153,7 +161,7 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleSortDirectionChange = () => {
-    setSortDirection(prevDirection => prevDirection === 'asc' ? 'desc' : 'asc');
+    setSortDirection((prevDirection) => (prevDirection === 'asc' ? 'desc' : 'asc'));
     setPage(0);
   };
 
@@ -183,16 +191,16 @@ const ProjectsPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!projectToDelete) return;
-    
+
     try {
       setIsDeleting(true);
       setDeleteError(null);
-      
+
       await deleteProject(projectToDelete.id);
-      
+
       // Successfully deleted, refresh the list
       fetchProjects();
-      
+
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
     } catch (err) {
@@ -203,10 +211,11 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
-  if (loading && projects.length === 0) { // Show main loading only on initial load
+  if (loading && projects.length === 0) {
+    // Show main loading only on initial load
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
-        <LinearProgress sx={{ mb: 2 }}/>
+        <LinearProgress sx={{ mb: 2 }} />
         <Typography>Loading projects...</Typography>
       </Container>
     );
@@ -222,19 +231,24 @@ const ProjectsPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Paper 
-        component="form" 
+      <Paper
+        component="form"
         onSubmit={(e) => e.preventDefault()}
         sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}
       >
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          justifyContent="space-between" 
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
           alignItems={{ xs: 'flex-start', sm: 'center' }}
           spacing={2}
           sx={{ mb: 3 }}
         >
-          <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
             <FolderIcon sx={{ mr: 1.5, fontSize: '2rem' }} color="primary" /> Projects
           </Typography>
           <Stack direction="row" spacing={1}>
@@ -257,7 +271,16 @@ const ProjectsPage: React.FC = () => {
         </Stack>
 
         {filtersVisible && (
-          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid rgba(0,0,0,0.12)' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              mb: 3,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: '1px solid rgba(0,0,0,0.12)',
+            }}
+          >
             <Typography variant="subtitle1" gutterBottom>
               Filter and Sort Options
             </Typography>
@@ -280,7 +303,7 @@ const ProjectsPage: React.FC = () => {
                   InputProps={{
                     endAdornment: isFiltering ? (
                       <CircularProgress size={20} thickness={5} sx={{ color: 'primary.light' }} />
-                    ) : null
+                    ) : null,
                   }}
                 />
               </Grid>
@@ -310,17 +333,12 @@ const ProjectsPage: React.FC = () => {
                         onChange={handleSortDirectionChange}
                       />
                     }
-                    label={sortDirection === 'asc' ? "Sort A-Z" : "Sort Z-A"}
+                    label={sortDirection === 'asc' ? 'Sort A-Z' : 'Sort Z-A'}
                   />
                 </FormGroup>
               </Grid>
               <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 2' } }}>
-                <Button
-                  variant="outlined"
-                  onClick={clearFilters}
-                  size="small"
-                  fullWidth
-                >
+                <Button variant="outlined" onClick={clearFilters} size="small" fullWidth>
                   Clear Filters
                 </Button>
               </Grid>
@@ -338,28 +356,46 @@ const ProjectsPage: React.FC = () => {
           <Box>
             <Grid container spacing={3}>
               {projects.map((project) => (
-                <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }} key={project.id.toString()}>
-                  <Card sx={{
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    height: '100%', 
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    transition: 'box-shadow 0.3s ease-in-out',
-                    '&:hover': { 
-                      boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
-                      transform: 'translateY(-2px)'
-                    },
-                    borderRadius: '8px'
-                  }}>
+                <Grid
+                  item
+                  sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }}
+                  key={project.id.toString()}
+                >
+                  <Card
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      transition: 'box-shadow 0.3s ease-in-out',
+                      '&:hover': {
+                        boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
+                        transform: 'translateY(-2px)',
+                      },
+                      borderRadius: '8px',
+                    }}
+                  >
                     <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                        <Typography variant="h6" component="h2" gutterBottom sx={{ fontWeight: 'medium', mb: 0 }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          mb: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          component="h2"
+                          gutterBottom
+                          sx={{ fontWeight: 'medium', mb: 0 }}
+                        >
                           {project.label}
                         </Typography>
                         <Tooltip title="Delete Project">
-                          <IconButton 
-                            size="small" 
-                            color="error" 
+                          <IconButton
+                            size="small"
+                            color="error"
                             onClick={(e) => handleDeleteClick(e, project)}
                             sx={{ ml: 1 }}
                           >
@@ -367,41 +403,41 @@ const ProjectsPage: React.FC = () => {
                           </IconButton>
                         </Tooltip>
                       </Box>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary" 
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
                         sx={{
-                          mb: 1.5, 
+                          mb: 1.5,
                           minHeight: '60px', // Adjust for 3 lines approx
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
-                          textOverflow: 'ellipsis'
+                          textOverflow: 'ellipsis',
                         }}
                       >
                         {project.description || 'No description available.'}
                       </Typography>
                       {project.tags && project.tags.length > 0 && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, mb:1 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1, mb: 1 }}>
                           {project.tags.slice(0, 3).map((tag, index) => (
-                            <Chip 
-                              label={tag} 
-                              key={`${project.id}-tag-${index}`} 
-                              size="small" 
-                              variant="outlined" 
+                            <Chip
+                              label={tag}
+                              key={`${project.id}-tag-${index}`}
+                              size="small"
+                              variant="outlined"
                               color="primary"
                               sx={{ fontSize: '0.75rem' }}
                             />
                           ))}
                           {project.tags.length > 3 && (
-                             <Chip 
-                               label={`+${project.tags.length - 3} more`} 
-                               size="small" 
-                               variant="outlined"
-                               color="default"
-                               sx={{ fontSize: '0.75rem' }}
-                              />
+                            <Chip
+                              label={`+${project.tags.length - 3} more`}
+                              size="small"
+                              variant="outlined"
+                              color="default"
+                              sx={{ fontSize: '0.75rem' }}
+                            />
                           )}
                         </Box>
                       )}
@@ -430,16 +466,16 @@ const ProjectsPage: React.FC = () => {
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               rowsPerPageOptions={[5, 10, 15, 25, 50]}
-              sx={{ 
-                mt: 4, 
-                borderTop: '1px solid rgba(224, 224, 224, 1)', 
+              sx={{
+                mt: 4,
+                borderTop: '1px solid rgba(224, 224, 224, 1)',
                 pt: 2,
                 '& .MuiTablePagination-toolbar': {
-                  justifyContent: 'center'
+                  justifyContent: 'center',
                 },
                 '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                  margin: 0
-                }
+                  margin: 0,
+                },
               }}
               labelRowsPerPage="Projects per page:"
             />
@@ -454,12 +490,11 @@ const ProjectsPage: React.FC = () => {
         aria-labelledby="delete-project-dialog-title"
         aria-describedby="delete-project-dialog-description"
       >
-        <DialogTitle id="delete-project-dialog-title">
-          Delete Project
-        </DialogTitle>
+        <DialogTitle id="delete-project-dialog-title">Delete Project</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-project-dialog-description">
-            Are you sure you want to delete the project "{projectToDelete?.label}"? This action cannot be undone and will also delete all associated monitors.
+            Are you sure you want to delete the project "{projectToDelete?.label}"? This action
+            cannot be undone and will also delete all associated monitors.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -471,9 +506,9 @@ const ProjectsPage: React.FC = () => {
           <Button onClick={handleDeleteCancel} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
           >
@@ -485,4 +520,4 @@ const ProjectsPage: React.FC = () => {
   );
 };
 
-export default ProjectsPage; 
+export default ProjectsPage;

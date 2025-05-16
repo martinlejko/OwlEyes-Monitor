@@ -75,4 +75,4 @@ export interface PaginatedResponse<T> {
 // Error response
 export interface ErrorResponse {
   error: string;
-} 
+}

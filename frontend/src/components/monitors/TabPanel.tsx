@@ -21,11 +21,7 @@ export const TabPanel: React.FC<TabPanelProps> = (props) => {
       aria-labelledby={`monitor-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
-}; 
+};

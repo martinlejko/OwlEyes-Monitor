@@ -11,7 +11,7 @@ import {
   LineElement,
   Title,
   Tooltip as ChartTooltip,
-  Legend
+  Legend,
 } from 'chart.js';
 import { GraphDataPoint } from '../../types';
 
@@ -23,7 +23,7 @@ ChartJS.register(
   LineElement,
   Title,
   ChartTooltip,
-  Legend
+  Legend,
 );
 
 interface GraphViewProps {
@@ -38,11 +38,11 @@ interface GraphViewProps {
  */
 export const GraphView: React.FC<GraphViewProps> = ({ data, onRefresh, loading }) => {
   const chartData = {
-    labels: data.map(point => format(parseISO(point.time), 'HH:mm:ss')),
+    labels: data.map((point) => format(parseISO(point.time), 'HH:mm:ss')),
     datasets: [
       {
         label: 'Response Time (ms)',
-        data: data.map(point => point.responseTime),
+        data: data.map((point) => point.responseTime),
         borderColor: '#3c5a72',
         backgroundColor: 'rgba(60, 90, 114, 0.1)',
         fill: true,
@@ -84,11 +84,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ data, onRefresh, loading }
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5">Response Time Graph</Typography>
-        <Button 
-          startIcon={<RefreshIcon />} 
-          onClick={onRefresh}
-          variant="outlined"
-        >
+        <Button startIcon={<RefreshIcon />} onClick={onRefresh} variant="outlined">
           Refresh
         </Button>
       </Box>
@@ -97,7 +93,14 @@ export const GraphView: React.FC<GraphViewProps> = ({ data, onRefresh, loading }
           {data.length > 0 ? (
             <Line data={chartData} options={options} />
           ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+              }}
+            >
               <Typography color="text.secondary">No graph data available</Typography>
             </Box>
           )}
@@ -105,4 +108,4 @@ export const GraphView: React.FC<GraphViewProps> = ({ data, onRefresh, loading }
       </Paper>
     </Box>
   );
-}; 
+};

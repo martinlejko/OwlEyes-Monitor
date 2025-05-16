@@ -1,16 +1,16 @@
 import React from 'react';
-import { 
-  Box, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
   TableRow,
   TablePagination,
   Typography,
   Chip,
-  LinearProgress
+  LinearProgress,
 } from '@mui/material';
 import { format } from 'date-fns';
 import { MonitorStatus } from '../../types';
@@ -41,7 +41,7 @@ export const ListView: React.FC<ListViewProps> = ({
   return (
     <Box>
       {loading && <LinearProgress />}
-      
+
       {statuses.length === 0 ? (
         <Box sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary">
@@ -63,17 +63,13 @@ export const ListView: React.FC<ListViewProps> = ({
               <TableBody>
                 {statuses.map((status) => (
                   <TableRow key={status.id}>
+                    <TableCell>{format(new Date(status.startTime), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{format(new Date(status.startTime), 'HH:mm:ss')}</TableCell>
                     <TableCell>
-                      {format(new Date(status.startTime), 'yyyy-MM-dd')}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(status.startTime), 'HH:mm:ss')}
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={status.status ? 'UP' : 'DOWN'} 
-                        size="small" 
-                        color={status.status ? 'success' : 'error'} 
+                      <Chip
+                        label={status.status ? 'UP' : 'DOWN'}
+                        size="small"
+                        color={status.status ? 'success' : 'error'}
                       />
                     </TableCell>
                     <TableCell align="right">{status.responseTime}</TableCell>
@@ -82,7 +78,7 @@ export const ListView: React.FC<ListViewProps> = ({
               </TableBody>
             </Table>
           </TableContainer>
-          
+
           <TablePagination
             rowsPerPageOptions={[5, 10, 25, 50]}
             component="div"
@@ -96,4 +92,4 @@ export const ListView: React.FC<ListViewProps> = ({
       )}
     </Box>
   );
-}; 
+};

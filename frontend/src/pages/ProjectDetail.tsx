@@ -27,7 +27,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -36,9 +36,15 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
 } from '@mui/icons-material';
-import { getProject, getMonitors, deleteProject, updateProject, deleteMonitor } from '../services/api';
+import {
+  getProject,
+  getMonitors,
+  deleteProject,
+  updateProject,
+  deleteMonitor,
+} from '../services/api';
 import { Project, Monitor } from '../types';
 
 const ProjectDetail: React.FC = () => {
@@ -49,7 +55,7 @@ const ProjectDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
-  
+
   // Filter states
   const [labelFilter, setLabelFilter] = useState('');
   const [debouncedLabelFilter, setDebouncedLabelFilter] = useState('');
@@ -57,12 +63,12 @@ const ProjectDetail: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'up' | 'down'>('all');
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
-  
+
   // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  
+
   // Edit dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,20 +80,20 @@ const ProjectDetail: React.FC = () => {
   }>({
     label: '',
     description: '',
-    tags: []
+    tags: [],
   });
   const [newTag, setNewTag] = useState('');
   const [editFormErrors, setEditFormErrors] = useState({
     label: '',
-    description: ''
+    description: '',
   });
-  
+
   // Monitor delete states
   const [monitorDeleteDialogOpen, setMonitorDeleteDialogOpen] = useState(false);
   const [monitorToDelete, setMonitorToDelete] = useState<Monitor | null>(null);
   const [isDeletingMonitor, setIsDeletingMonitor] = useState(false);
   const [monitorDeleteError, setMonitorDeleteError] = useState<string | null>(null);
-  
+
   // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,38 +119,38 @@ const ProjectDetail: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     if (!id) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       // Add cache-busting timestamp to prevent stale data
       const timestamp = new Date().getTime();
       console.log('Fetching project data with cache buster:', timestamp);
-      
+
       // Fetch project details
       const projectData = await getProject(parseInt(id));
       setProject(projectData);
-      
+
       // Fetch monitors for this project with filters
       let statusBool: boolean | undefined = undefined;
       if (statusFilter === 'up') statusBool = true;
       if (statusFilter === 'down') statusBool = false;
-      
+
       const typeValue = typeFilter === 'all' ? undefined : typeFilter;
-      
+
       const monitorsResponse = await getMonitors(
-        1, 
-        100, 
+        1,
+        100,
         parseInt(id),
         debouncedLabelFilter || undefined,
         typeValue,
-        statusBool
+        statusBool,
       );
-      
+
       console.log(`Loaded ${monitorsResponse.data.length} monitors for project ${id}`);
       setMonitors(monitorsResponse.data);
-      
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching project details:', err);
@@ -152,7 +158,7 @@ const ProjectDetail: React.FC = () => {
       setLoading(false);
     }
   }, [id, location.search, debouncedLabelFilter, typeFilter, statusFilter]);
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -197,18 +203,18 @@ const ProjectDetail: React.FC = () => {
   const handleDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
-      
+
       if (id) {
         console.log('Confirming deletion of project ID:', id);
-        
+
         // Add cache-busting timestamp for navigation
         const timestamp = new Date().getTime();
-        
+
         await deleteProject(parseInt(id));
         console.log('Delete operation completed successfully');
-        
+
         setDeleteDialogOpen(false);
-        
+
         // Navigate back to projects list with cache buster
         navigate(`/projects?_=${timestamp}`);
       }
@@ -225,12 +231,12 @@ const ProjectDetail: React.FC = () => {
       setEditFormData({
         label: project.label,
         description: project.description,
-        tags: [...project.tags]
+        tags: [...project.tags],
       });
       setEditError(null);
       setEditFormErrors({
         label: '',
-        description: ''
+        description: '',
       });
       setEditDialogOpen(true);
     }
@@ -244,23 +250,23 @@ const ProjectDetail: React.FC = () => {
     const { name, value } = e.target;
     setEditFormData({
       ...editFormData,
-      [name]: value
+      [name]: value,
     });
-    
+
     // Clear error when user types
     if (editFormErrors[name as keyof typeof editFormErrors]) {
       setEditFormErrors({
         ...editFormErrors,
-        [name]: ''
+        [name]: '',
       });
     }
   };
-  
+
   const handleAddTag = () => {
     if (newTag.trim() && !editFormData.tags.includes(newTag.trim())) {
       setEditFormData({
         ...editFormData,
-        tags: [...editFormData.tags, newTag.trim()]
+        tags: [...editFormData.tags, newTag.trim()],
       });
       setNewTag('');
     }
@@ -269,7 +275,7 @@ const ProjectDetail: React.FC = () => {
   const handleRemoveTag = (tagToRemove: string) => {
     setEditFormData({
       ...editFormData,
-      tags: editFormData.tags.filter(tag => tag !== tagToRemove)
+      tags: editFormData.tags.filter((tag) => tag !== tagToRemove),
     });
   };
 
@@ -283,26 +289,26 @@ const ProjectDetail: React.FC = () => {
   const validateEditForm = (): boolean => {
     const errors = {
       label: '',
-      description: ''
+      description: '',
     };
-    
+
     let isValid = true;
-    
+
     if (!editFormData.label.trim()) {
       errors.label = 'Project name is required';
       isValid = false;
     }
-    
+
     if (editFormData.label.length > 100) {
       errors.label = 'Project name must be less than 100 characters';
       isValid = false;
     }
-    
+
     if (editFormData.description.length > 500) {
       errors.description = 'Description must be less than 500 characters';
       isValid = false;
     }
-    
+
     setEditFormErrors(errors);
     return isValid;
   };
@@ -311,19 +317,19 @@ const ProjectDetail: React.FC = () => {
     if (!validateEditForm() || !id) {
       return;
     }
-    
+
     setIsSaving(true);
     setEditError(null);
-    
+
     try {
       await updateProject(parseInt(id), {
         label: editFormData.label.trim(),
         description: editFormData.description.trim(),
-        tags: editFormData.tags
+        tags: editFormData.tags,
       });
-      
+
       setEditDialogOpen(false);
-      
+
       // Refresh the data
       fetchData();
     } catch (err) {
@@ -349,16 +355,16 @@ const ProjectDetail: React.FC = () => {
 
   const handleMonitorDeleteConfirm = async () => {
     if (!monitorToDelete) return;
-    
+
     try {
       setIsDeletingMonitor(true);
       setMonitorDeleteError(null);
-      
+
       await deleteMonitor(monitorToDelete.id);
-      
+
       // Successfully deleted, refresh the monitors list
       fetchData();
-      
+
       setMonitorDeleteDialogOpen(false);
       setMonitorToDelete(null);
     } catch (err) {
@@ -384,11 +390,7 @@ const ProjectDetail: React.FC = () => {
     return (
       <Box>
         <Alert severity="error">{error}</Alert>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate('/projects')} 
-          sx={{ mt: 2 }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/projects')} sx={{ mt: 2 }}>
           Back to Projects
         </Button>
       </Box>
@@ -399,11 +401,7 @@ const ProjectDetail: React.FC = () => {
     return (
       <Box>
         <Alert severity="warning">Project not found</Alert>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate('/projects')} 
-          sx={{ mt: 2 }}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/projects')} sx={{ mt: 2 }}>
           Back to Projects
         </Button>
       </Box>
@@ -413,34 +411,31 @@ const ProjectDetail: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={() => navigate('/projects')}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/projects')}>
           Back to Projects
         </Button>
         <Box>
-          <Button 
-            variant="outlined" 
-            color="primary" 
+          <Button
+            variant="outlined"
+            color="primary"
             startIcon={<EditIcon />}
             onClick={handleEditClick}
             sx={{ mr: 1 }}
           >
             Edit Project
           </Button>
-          <Button 
-            variant="outlined" 
-            color="error" 
+          <Button
+            variant="outlined"
+            color="error"
             startIcon={<DeleteIcon />}
             onClick={handleDeleteClick}
             sx={{ mr: 1 }}
           >
             Delete Project
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             startIcon={<AddIcon />}
             onClick={() => navigate(`/monitors/new?projectId=${id}`)}
           >
@@ -448,19 +443,19 @@ const ProjectDetail: React.FC = () => {
           </Button>
         </Box>
       </Box>
-      
+
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <Typography variant="h4" gutterBottom>
             {project.label}
           </Typography>
-          
+
           {project.description && (
             <Typography variant="body1" color="text.secondary" paragraph>
               {project.description}
             </Typography>
           )}
-          
+
           <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
             {project.tags.map((tag, index) => (
               <Chip key={index} label={tag} color="primary" variant="outlined" />
@@ -468,23 +463,28 @@ const ProjectDetail: React.FC = () => {
           </Stack>
         </CardContent>
       </Card>
-      
+
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h5" gutterBottom>
             Monitors
           </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<FilterIcon />}
-            onClick={toggleFilters}
-          >
+          <Button variant="outlined" startIcon={<FilterIcon />} onClick={toggleFilters}>
             {filtersVisible ? 'Hide Filters' : 'Show Filters'}
           </Button>
         </Box>
-        
+
         {filtersVisible && (
-          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid rgba(0,0,0,0.12)' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              mb: 3,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: '1px solid rgba(0,0,0,0.12)',
+            }}
+          >
             <Typography variant="subtitle1" gutterBottom>
               Filter Options
             </Typography>
@@ -506,18 +506,14 @@ const ProjectDetail: React.FC = () => {
                   InputProps={{
                     endAdornment: isFiltering ? (
                       <CircularProgress size={20} thickness={5} sx={{ color: 'primary.light' }} />
-                    ) : null
+                    ) : null,
                   }}
                 />
               </Grid>
               <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Monitor Type</InputLabel>
-                  <Select
-                    value={typeFilter}
-                    label="Monitor Type"
-                    onChange={handleTypeFilterChange}
-                  >
+                  <Select value={typeFilter} label="Monitor Type" onChange={handleTypeFilterChange}>
                     <MenuItem value="all">All Types</MenuItem>
                     <MenuItem value="ping">Ping</MenuItem>
                     <MenuItem value="website">Website</MenuItem>
@@ -527,11 +523,7 @@ const ProjectDetail: React.FC = () => {
               <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Status</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    label="Status"
-                    onChange={handleStatusFilterChange}
-                  >
+                  <Select value={statusFilter} label="Status" onChange={handleStatusFilterChange}>
                     <MenuItem value="all">All Statuses</MenuItem>
                     <MenuItem value="up">Up</MenuItem>
                     <MenuItem value="down">Down</MenuItem>
@@ -539,30 +531,27 @@ const ProjectDetail: React.FC = () => {
                 </FormControl>
               </Grid>
               <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
-                <Button
-                  variant="outlined"
-                  onClick={clearFilters}
-                  size="small"
-                  fullWidth
-                >
+                <Button variant="outlined" onClick={clearFilters} size="small" fullWidth>
                   Clear Filters
                 </Button>
               </Grid>
             </Grid>
           </Paper>
         )}
-        
+
         {loading && <LinearProgress sx={{ mb: 2 }} />}
-        
+
         {monitors.length === 0 ? (
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="body1" color="text.secondary">
-              {filtersVisible ? 'No monitors match your filters.' : 'No monitors found for this project.'}
+              {filtersVisible
+                ? 'No monitors match your filters.'
+                : 'No monitors found for this project.'}
             </Typography>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              startIcon={<AddIcon />} 
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
               sx={{ mt: 2 }}
               onClick={() => navigate(`/monitors/new?projectId=${id}`)}
             >
@@ -573,15 +562,22 @@ const ProjectDetail: React.FC = () => {
           <Grid container spacing={2}>
             {monitors.map((monitor) => (
               <Grid item xs={12} sm={6} md={4} key={monitor.id}>
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     cursor: 'pointer',
-                    borderLeft: `4px solid ${getStatusColor(monitor.latestStatus?.status)}`
+                    borderLeft: `4px solid ${getStatusColor(monitor.latestStatus?.status)}`,
                   }}
                   onClick={() => navigate(`/monitors/${monitor.id}`)}
                 >
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 1,
+                      }}
+                    >
                       <Typography variant="subtitle1" gutterBottom sx={{ mb: 0 }}>
                         {monitor.label}
                       </Typography>
@@ -596,16 +592,22 @@ const ProjectDetail: React.FC = () => {
                       </Tooltip>
                     </Box>
                     <Divider sx={{ my: 1 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Chip 
-                        label={monitor.type.toUpperCase()} 
-                        size="small" 
-                        color={monitor.type === 'ping' ? 'info' : 'secondary'} 
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Chip
+                        label={monitor.type.toUpperCase()}
+                        size="small"
+                        color={monitor.type === 'ping' ? 'info' : 'secondary'}
                       />
-                      <Chip 
-                        label={monitor.latestStatus?.status ? 'UP' : 'DOWN'} 
-                        size="small" 
-                        color={monitor.latestStatus?.status ? 'success' : 'error'} 
+                      <Chip
+                        label={monitor.latestStatus?.status ? 'UP' : 'DOWN'}
+                        size="small"
+                        color={monitor.latestStatus?.status ? 'success' : 'error'}
                         sx={{ ml: 1 }}
                       />
                     </Box>
@@ -621,7 +623,7 @@ const ProjectDetail: React.FC = () => {
           </Grid>
         )}
       </Box>
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -629,12 +631,11 @@ const ProjectDetail: React.FC = () => {
         aria-labelledby="delete-project-dialog-title"
         aria-describedby="delete-project-dialog-description"
       >
-        <DialogTitle id="delete-project-dialog-title">
-          Delete Project
-        </DialogTitle>
+        <DialogTitle id="delete-project-dialog-title">Delete Project</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-project-dialog-description">
-            Are you sure you want to delete the project "{project.label}"? This action cannot be undone and will also delete all associated monitors.
+            Are you sure you want to delete the project "{project.label}"? This action cannot be
+            undone and will also delete all associated monitors.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -646,9 +647,9 @@ const ProjectDetail: React.FC = () => {
           <Button onClick={handleDeleteCancel} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
           >
@@ -656,7 +657,7 @@ const ProjectDetail: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Edit Project Dialog */}
       <Dialog
         open={editDialogOpen}
@@ -665,16 +666,14 @@ const ProjectDetail: React.FC = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle id="edit-project-dialog-title">
-          Edit Project
-        </DialogTitle>
+        <DialogTitle id="edit-project-dialog-title">Edit Project</DialogTitle>
         <DialogContent>
           {editError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {editError}
             </Alert>
           )}
-          
+
           <TextField
             autoFocus
             margin="dense"
@@ -691,7 +690,7 @@ const ProjectDetail: React.FC = () => {
             sx={{ mb: 2 }}
             required
           />
-          
+
           <TextField
             margin="dense"
             id="description"
@@ -708,7 +707,7 @@ const ProjectDetail: React.FC = () => {
             rows={4}
             sx={{ mb: 2 }}
           />
-          
+
           <Box sx={{ mb: 1 }}>
             <Typography variant="subtitle1" gutterBottom>
               Tags
@@ -724,7 +723,7 @@ const ProjectDetail: React.FC = () => {
                 />
               ))}
             </Stack>
-            
+
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <TextField
                 label="Add Tag"
@@ -735,11 +734,7 @@ const ProjectDetail: React.FC = () => {
                 onKeyPress={handleKeyPress}
                 sx={{ flexGrow: 1, mr: 1 }}
               />
-              <Button
-                variant="outlined"
-                onClick={handleAddTag}
-                disabled={!newTag.trim()}
-              >
+              <Button variant="outlined" onClick={handleAddTag} disabled={!newTag.trim()}>
                 Add
               </Button>
             </Box>
@@ -749,9 +744,9 @@ const ProjectDetail: React.FC = () => {
           <Button onClick={handleEditCancel} disabled={isSaving}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSaveEdit} 
-            color="primary" 
+          <Button
+            onClick={handleSaveEdit}
+            color="primary"
             disabled={isSaving}
             startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
           >
@@ -759,7 +754,7 @@ const ProjectDetail: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Monitor Delete Confirmation Dialog */}
       <Dialog
         open={monitorDeleteDialogOpen}
@@ -767,12 +762,11 @@ const ProjectDetail: React.FC = () => {
         aria-labelledby="delete-monitor-dialog-title"
         aria-describedby="delete-monitor-dialog-description"
       >
-        <DialogTitle id="delete-monitor-dialog-title">
-          Delete Monitor
-        </DialogTitle>
+        <DialogTitle id="delete-monitor-dialog-title">Delete Monitor</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-monitor-dialog-description">
-            Are you sure you want to delete the monitor "{monitorToDelete?.label}"? This action cannot be undone and will also delete all associated status history.
+            Are you sure you want to delete the monitor "{monitorToDelete?.label}"? This action
+            cannot be undone and will also delete all associated status history.
           </DialogContentText>
           {monitorDeleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -784,9 +778,9 @@ const ProjectDetail: React.FC = () => {
           <Button onClick={handleMonitorDeleteCancel} disabled={isDeletingMonitor}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleMonitorDeleteConfirm} 
-            color="error" 
+          <Button
+            onClick={handleMonitorDeleteConfirm}
+            color="error"
             disabled={isDeletingMonitor}
             startIcon={isDeletingMonitor ? <CircularProgress size={20} /> : <DeleteIcon />}
           >
@@ -798,4 +792,4 @@ const ProjectDetail: React.FC = () => {
   );
 };
 
-export default ProjectDetail; 
+export default ProjectDetail;

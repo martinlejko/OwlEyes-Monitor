@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Typography, Chip, Button, Card, CardContent } from '@mui/material';
-import { 
+import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   QueryStats as QueryStatsIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { Monitor } from '../../types';
 
@@ -23,19 +23,18 @@ export const MonitorHeader: React.FC<MonitorHeaderProps> = ({
   monitor,
   onEdit,
   onDelete,
-  onBack
+  onBack,
 }) => {
-  
   const getStatusText = (status?: boolean): string => {
     if (status === undefined) return 'UNKNOWN';
     return status ? 'UP' : 'DOWN';
   };
-  
+
   const getMonitorTypeDetails = () => {
     if (monitor.type === 'ping') {
       return (
         <Typography variant="body2" color="text.secondary">
-          Host: {monitor.host} 
+          Host: {monitor.host}
           {monitor.port && ` : ${monitor.port}`}
         </Typography>
       );
@@ -46,54 +45,48 @@ export const MonitorHeader: React.FC<MonitorHeaderProps> = ({
         </Typography>
       );
     }
-    
+
     return null;
   };
-  
+
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={onBack}
-        >
+        <Button startIcon={<ArrowBackIcon />} onClick={onBack}>
           Back to Project
         </Button>
         <Box>
-          <Button 
-            variant="outlined" 
-            color="primary" 
+          <Button
+            variant="outlined"
+            color="primary"
             startIcon={<EditIcon />}
             onClick={onEdit}
             sx={{ mr: 1 }}
           >
             Edit
           </Button>
-          <Button 
-            variant="outlined" 
-            color="error" 
-            startIcon={<DeleteIcon />}
-            onClick={onDelete}
-          >
+          <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={onDelete}>
             Delete
           </Button>
         </Box>
       </Box>
-      
+
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'flex-start'
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+            }}
+          >
             <Box>
               <Typography variant="h4" gutterBottom>
                 {monitor.label}
               </Typography>
-              <Chip 
-                label={monitor.type.toUpperCase()} 
-                color={monitor.type === 'ping' ? 'info' : 'secondary'} 
+              <Chip
+                label={monitor.type.toUpperCase()}
+                color={monitor.type === 'ping' ? 'info' : 'secondary'}
                 sx={{ mb: 1 }}
               />
               {getMonitorTypeDetails()}
@@ -105,9 +98,9 @@ export const MonitorHeader: React.FC<MonitorHeaderProps> = ({
               </Typography>
             </Box>
             <Box>
-              <Chip 
-                label={getStatusText(monitor.latestStatus?.status)} 
-                color={monitor.latestStatus?.status ? 'success' : 'error'} 
+              <Chip
+                label={getStatusText(monitor.latestStatus?.status)}
+                color={monitor.latestStatus?.status ? 'success' : 'error'}
                 sx={{ fontWeight: 'bold', fontSize: '1.1rem', px: 2, py: 2.5 }}
               />
             </Box>
@@ -116,4 +109,4 @@ export const MonitorHeader: React.FC<MonitorHeaderProps> = ({
       </Card>
     </>
   );
-}; 
+};

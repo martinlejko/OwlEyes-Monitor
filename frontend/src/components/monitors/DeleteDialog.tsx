@@ -6,7 +6,7 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  Alert
+  Alert,
 } from '@mui/material';
 
 interface DeleteDialogProps {
@@ -30,7 +30,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
   error,
   isDeleting,
   onCancel,
-  onConfirm
+  onConfirm,
 }) => {
   return (
     <Dialog
@@ -39,13 +39,9 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
-      <DialogTitle id="alert-dialog-title">
-        {title}
-      </DialogTitle>
+      <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
       <DialogContent>
-        <DialogContentText id="alert-dialog-description">
-          {message}
-        </DialogContentText>
+        <DialogContentText id="alert-dialog-description">{message}</DialogContentText>
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
@@ -53,16 +49,13 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={isDeleting}>Cancel</Button>
-        <Button 
-          onClick={onConfirm} 
-          color="error" 
-          autoFocus
-          disabled={isDeleting}
-        >
+        <Button onClick={onCancel} disabled={isDeleting}>
+          Cancel
+        </Button>
+        <Button onClick={onConfirm} color="error" autoFocus disabled={isDeleting}>
           {isDeleting ? 'Deleting...' : 'Delete'}
         </Button>
       </DialogActions>
     </Dialog>
   );
-}; 
+};

@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
+  Grid as MuiGrid,
   LinearProgress,
   Alert,
   TablePagination,
@@ -45,6 +45,8 @@ import {
 } from '@mui/icons-material';
 import { getProjects, deleteProject, FilterParams } from '../services/api';
 import { Project } from '../types';
+
+const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();

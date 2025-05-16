@@ -24,7 +24,7 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath intl
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy Apache configuration
-COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ../docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Enable rewrite module
 RUN a2enmod rewrite

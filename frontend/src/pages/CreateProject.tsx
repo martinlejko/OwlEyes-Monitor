@@ -7,7 +7,7 @@ import {
   TextField,
   Container,
   Paper,
-  Grid,
+  Grid as MuiGrid,
   LinearProgress,
   Alert,
   Stack,
@@ -22,6 +22,8 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { createProject } from '../services/api';
+
+const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
 
 const CreateProject: React.FC = () => {
   const navigate = useNavigate();

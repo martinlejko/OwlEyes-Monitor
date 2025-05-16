@@ -10,7 +10,7 @@ import {
   Divider,
   LinearProgress,
   Alert,
-  Grid,
+  Grid as MuiGrid,
   Stack,
   Paper,
   TextField,
@@ -28,6 +28,7 @@ import {
   DialogTitle,
   IconButton,
   Tooltip,
+  SelectChangeEvent,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -46,6 +47,8 @@ import {
   deleteMonitor,
 } from '../services/api';
 import { Project, Monitor } from '../types';
+
+const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -173,11 +176,11 @@ const ProjectDetail: React.FC = () => {
     setLabelFilter(event.target.value);
   };
 
-  const handleTypeFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleTypeFilterChange = (event: SelectChangeEvent) => {
     setTypeFilter(event.target.value as 'all' | 'ping' | 'website');
   };
 
-  const handleStatusFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleStatusFilterChange = (event: SelectChangeEvent) => {
     setStatusFilter(event.target.value as 'all' | 'up' | 'down');
   };
 
@@ -489,7 +492,7 @@ const ProjectDetail: React.FC = () => {
               Filter Options
             </Typography>
             <Grid container spacing={2} alignItems="center">
-              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
+              <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
                   label="Filter by Label"
@@ -510,7 +513,7 @@ const ProjectDetail: React.FC = () => {
                   }}
                 />
               </Grid>
-              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
+              <Grid item xs={12} sm={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Monitor Type</InputLabel>
                   <Select value={typeFilter} label="Monitor Type" onChange={handleTypeFilterChange}>
@@ -520,7 +523,7 @@ const ProjectDetail: React.FC = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
+              <Grid item xs={12} sm={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Status</InputLabel>
                   <Select value={statusFilter} label="Status" onChange={handleStatusFilterChange}>
@@ -530,7 +533,7 @@ const ProjectDetail: React.FC = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item sx={{ width: '100%', gridColumn: { xs: 'span 12', sm: 'span 3' } }}>
+              <Grid item xs={12} sm={3}>
                 <Button variant="outlined" onClick={clearFilters} size="small" fullWidth>
                   Clear Filters
                 </Button>

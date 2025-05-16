@@ -12,7 +12,7 @@ import {
   FormHelperText,
   LinearProgress,
   Alert,
-  Grid,
+  Grid as MuiGrid,
   Paper,
   Container,
   Stack,
@@ -28,6 +28,8 @@ import {
 } from '@mui/icons-material';
 import { createMonitor, getProjects } from '../services/api';
 import { Project, Monitor, PingMonitor, WebsiteMonitor } from '../types';
+
+const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
 
 const CreateMonitor: React.FC = () => {
   const navigate = useNavigate();

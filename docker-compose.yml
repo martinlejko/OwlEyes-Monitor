@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL database
   postgres:
@@ -10,14 +8,17 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/database.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./backend/database_seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-    environment:
-      POSTGRES_DB: owleyes
-      POSTGRES_USER: owleyes
-      POSTGRES_PASSWORD: owleyes_password
+    env_file:
+      - backend/.env
     ports:
       - "5432:5432"
     networks:
       - owleyes-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
       
   # PHP Backend
   backend:
@@ -34,14 +35,8 @@ services:
       - ./backend/tests:/var/www/tests
       - ./backend/logs:/var/www/logs
       - ./backend/.env:/var/www/.env
-    environment:
-      DB_HOST: postgres
-      DB_NAME: owleyes
-      DB_USER: owleyes
-      DB_PASSWORD: owleyes_password
-      APP_DEBUG: 'true'
-      APP_URL: http://localhost:8000
-      CORS_ORIGIN: http://localhost:3000
+    env_file:
+      - backend/.env
     ports:
       - "8000:80"
     networks:
@@ -60,27 +55,23 @@ services:
       - ./backend/src:/app/src
       - ./backend/logs:/app/logs
       - ./backend/.env:/app/.env
-    environment:
-      DB_HOST: postgres
-      DB_NAME: owleyes
-      DB_USER: owleyes
-      DB_PASSWORD: owleyes_password
+    env_file:
+      - backend/.env
     networks:
       - owleyes-network
       
   # React Frontend
   frontend:
-    image: node:18
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
     container_name: owleyes-frontend
     working_dir: /app
-    command: bash -c "npm install && npm start"
     restart: unless-stopped
     volumes:
       - ./frontend:/app
-    environment:
-      NODE_ENV: development
-      REACT_APP_API_URL: http://localhost:8000/api
-      REACT_APP_GRAPHQL_URL: http://localhost:8000/graphql
+    env_file:
+      - backend/.env
     ports:
       - "3000:3000"
     networks:

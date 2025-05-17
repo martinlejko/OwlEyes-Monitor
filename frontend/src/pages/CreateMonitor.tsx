@@ -140,8 +140,9 @@ const CreateMonitor: React.FC = () => {
       errors.projectId = 'Project is required';
     }
 
-    if (!formData.periodicity || formData.periodicity < 10) {
-      errors.periodicity = 'Check interval must be at least 10 seconds';
+    if (!formData.periodicity || formData.periodicity < 5) {
+      errors.periodicity =
+        'Periodicity - how often should the monitor be checked in seconds The allowed range is between 5 and 300 seconds';
     }
 
     if (formData.type === 'ping') {
@@ -357,9 +358,12 @@ const CreateMonitor: React.FC = () => {
                 value={formData.periodicity || ''}
                 onChange={handleInputChange}
                 error={!!formErrors.periodicity}
-                helperText={formErrors.periodicity || 'How often to check the service'}
+                helperText={
+                  formErrors.periodicity ||
+                  'How often to check the service. The allowed range is between 5 and 300 seconds'
+                }
                 required
-                inputProps={{ min: 10 }}
+                inputProps={{ min: 5 }}
                 disabled={saving}
               />
             </Grid>

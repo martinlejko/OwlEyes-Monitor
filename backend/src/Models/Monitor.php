@@ -11,7 +11,6 @@ class Monitor
     private string $type;
     private string $badgeLabel;
 
-    // Type-specific fields
     private ?string $host     = null;
     private ?int $port        = null;
     private ?string $url      = null;
@@ -27,7 +26,7 @@ class Monitor
     ) {
         $this->projectId = $projectId;
         $this->label     = $label;
-        $this->setPeriodicity($periodicity); // Uses validation
+        $this->setPeriodicity($periodicity);
         $this->type       = $type;
         $this->badgeLabel = $badgeLabel;
     }
@@ -75,7 +74,6 @@ class Monitor
 
     public function setPeriodicity(int $periodicity): self
     {
-        // Validate periodicity range
         if ($periodicity < 5 || $periodicity > 300) {
             throw new \InvalidArgumentException('Periodicity must be between 5 and 300 seconds');
         }
@@ -113,7 +111,6 @@ class Monitor
         return $this;
     }
 
-    // Ping monitor properties
     public function getHost(): ?string
     {
         return $this->host;
@@ -138,7 +135,6 @@ class Monitor
         return $this;
     }
 
-    // Website monitor properties
     public function getUrl(): ?string
     {
         return $this->url;
@@ -186,7 +182,6 @@ class Monitor
             'badgeLabel'  => $this->badgeLabel
         ];
 
-        // Add type-specific fields
         if ($this->type === 'ping') {
             $data['host'] = $this->host;
             $data['port'] = $this->port;
@@ -213,7 +208,6 @@ class Monitor
             $monitor->setId($data['id']);
         }
 
-        // Set type-specific fields
         if ($data['type'] === 'ping') {
             $monitor->setHost($data['host'] ?? null);
             $monitor->setPort($data['port'] ?? null);

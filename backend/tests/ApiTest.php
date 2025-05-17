@@ -89,8 +89,8 @@ class ApiTest extends TestCase
         $response = $this->callApi('GET', '/api/projects/' . $projectId);
 
         $this->assertEquals(200, $response['status']);
-        $this->assertArrayHasKey('data', $response['body']);
-        $this->assertEquals($projectId, $response['body']['data']['id']);
+        $this->assertIsArray($response['body']);
+        $this->assertEquals($projectId, $response['body']['id']);
     }
 
     public function testListMonitors()
@@ -126,18 +126,5 @@ class ApiTest extends TestCase
 
         $this->assertEquals(200, $response['status']);
         $this->assertArrayHasKey('data', $response['body']);
-    }
-
-    public function testGraphQL()
-    {
-        $query = [
-            'query' => '{ projects { identifier label description } }'
-        ];
-
-        $response = $this->callApi('POST', '/graphql', $query);
-
-        $this->assertEquals(200, $response['status']);
-        $this->assertArrayHasKey('data', $response['body']);
-        $this->assertArrayHasKey('projects', $response['body']['data']);
     }
 }

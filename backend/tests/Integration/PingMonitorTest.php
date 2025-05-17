@@ -1,6 +1,6 @@
 <?php
 
-namespace Martinlejko\Backend\Tests\Integration;
+namespace Tests\Integration;
 
 use Martinlejko\Backend\Models\Monitor;
 use Martinlejko\Backend\Models\MonitorStatus;

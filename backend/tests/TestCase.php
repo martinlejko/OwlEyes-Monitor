@@ -96,15 +96,17 @@ abstract class TestCase extends BaseTestCase
     /**
      * Helper method for string contains constraint
      */
-    protected function stringContains(string $value)
+    public static function stringContains(string $string, bool $ignoreCase = false): \PHPUnit\Framework\Constraint\StringContains
     {
-        return parent::stringContains($value);
+        // The StringContains constraint takes $string as the first parameter (the needle)
+        // and $ignoreCase as the second.
+        return new \PHPUnit\Framework\Constraint\StringContains($string, $ignoreCase);
     }
 
     /**
      * Helper to check if things are equal
      */
-    public static function equalTo($value)
+    public static function equalTo(mixed $value): \PHPUnit\Framework\Constraint\IsEqual
     {
         return parent::equalTo($value);
     }

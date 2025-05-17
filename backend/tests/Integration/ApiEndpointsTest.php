@@ -2,69 +2,13 @@
 
 namespace Tests\Integration;
 
-use Slim\Psr7\Factory\ServerRequestFactory;
-use Slim\Psr7\Factory\StreamFactory;
-use Slim\Psr7\Factory\UriFactory;
-use Tests\TestCase;
+use Tests\ApiTest;
 
-class ApiEndpointsTest extends TestCase
+class ApiEndpointsTest extends ApiTest
 {
-    protected function shouldUseMockDb(): bool
-    {
-        return false; // Use actual database for integration tests
-    }
-
-    /**
-     * Helper method to create a request
-     */
-    protected function createRequest(string $method, string $path, array $queryParams = [], array $body = []): \Slim\Psr7\Request
-    {
-        $factory    = new ServerRequestFactory();
-        $uriFactory = new UriFactory();
-        $uri        = $uriFactory->createUri('http://localhost:8000' . $path);
-
-        $request = $factory->createServerRequest($method, $uri);
-
-        if (!empty($queryParams)) {
-            $request = $request->withQueryParams($queryParams);
-        }
-
-        if (!empty($body)) {
-            $streamFactory = new StreamFactory();
-            $stream        = $streamFactory->createStream(json_encode($body));
-            $request       = $request->withBody($stream);
-            $request       = $request->withHeader('Content-Type', 'application/json');
-        }
-
-        return $request;
-    }
-
-    /**
-     * Helper method to send a request and get a response
-     */
-    protected function sendRequest($request)
-    {
-        // Process the request with the app
-        $response = $this->app->handle($request);
-
-        // Parse the response body if it's JSON
-        $body = (string) $response->getBody();
-
-        if (strpos($response->getHeaderLine('Content-Type'), 'application/json') === 0) {
-            $body = json_decode($body, true);
-        }
-
-        return [
-            'status'  => $response->getStatusCode(),
-            'headers' => $response->getHeaders(),
-            'body'    => $body
-        ];
-    }
-
     public function testGetProjects()
     {
-        $request  = $this->createRequest('GET', '/api/projects');
-        $response = $this->sendRequest($request);
+        $response = $this->callApi('GET', '/api/projects');
 
         $this->assertEquals(200, $response['status']);
         $this->assertArrayHasKey('data', $response['body']);
@@ -76,12 +20,13 @@ class ApiEndpointsTest extends TestCase
         $this->assertArrayHasKey('label', $firstProject);
         $this->assertArrayHasKey('description', $firstProject);
         $this->assertArrayHasKey('tags', $firstProject);
+
+        return $firstProject['id'];
     }
 
     public function testGetMonitors()
     {
-        $request  = $this->createRequest('GET', '/api/monitors');
-        $response = $this->sendRequest($request);
+        $response = $this->callApi('GET', '/api/monitors');
 
         $this->assertEquals(200, $response['status']);
         $this->assertArrayHasKey('data', $response['body']);
@@ -93,18 +38,16 @@ class ApiEndpointsTest extends TestCase
         $this->assertArrayHasKey('projectId', $firstMonitor);
         $this->assertArrayHasKey('label', $firstMonitor);
         $this->assertArrayHasKey('type', $firstMonitor);
+
+        return $firstMonitor['id'];
     }
 
-    public function testGetMonitorStatus()
+    /**
+     * @depends testGetMonitors
+     */
+    public function testGetMonitorStatus($monitorId)
     {
-        // First get a monitor ID to use
-        $request   = $this->createRequest('GET', '/api/monitors');
-        $response  = $this->sendRequest($request);
-        $monitorId = $response['body']['data'][0]['id'];
-
-        // Test getting status for this monitor
-        $request  = $this->createRequest('GET', '/api/monitors/' . $monitorId . '/status');
-        $response = $this->sendRequest($request);
+        $response = $this->callApi('GET', '/api/monitors/' . $monitorId . '/status');
 
         $this->assertEquals(200, $response['status']);
         $this->assertArrayHasKey('data', $response['body']);
@@ -119,30 +62,17 @@ class ApiEndpointsTest extends TestCase
         }
     }
 
-    public function testDeleteMonitor()
+    /**
+     * @depends testGetMonitors
+     */
+    public function testDeleteMonitor($monitorId)
     {
-        // First get all monitors to find the last one to delete
-        $request  = $this->createRequest('GET', '/api/monitors');
-        $response = $this->sendRequest($request);
-
-        if (count($response['body']['data']) < 1) {
-            $this->markTestSkipped('No monitors available to delete');
-        }
-
-        // Get the last monitor to minimize impact
-        $monitors    = $response['body']['data'];
-        $lastMonitor = end($monitors);
-        $monitorId   = $lastMonitor['id'];
-
         // Delete the monitor
-        $request  = $this->createRequest('DELETE', '/api/monitors/' . $monitorId);
-        $response = $this->sendRequest($request);
-
-        $this->assertEquals(200, $response['status']);
+        $response = $this->callApi('DELETE', '/api/monitors/' . $monitorId);
+        $this->assertEquals(204, $response['status']);
 
         // Verify it's deleted by trying to fetch it
-        $request  = $this->createRequest('GET', '/api/monitors/' . $monitorId);
-        $response = $this->sendRequest($request);
+        $response = $this->callApi('GET', '/api/monitors/' . $monitorId);
 
         // Should either return 404 or empty data
         if ($response['status'] === 200) {

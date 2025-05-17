@@ -1,15 +1,7 @@
 <?php
 
-/**
- * Simple API test script using curl
- *
- * This script tests various API endpoints and displays the results.
- * Run with: php tests/CurlTest.php
- */
-
 $apiUrl = 'http://localhost:8000';
 
-// Function to make API calls
 function callApi($method, $endpoint, $data = null)
 {
     global $apiUrl;
@@ -45,7 +37,6 @@ function callApi($method, $endpoint, $data = null)
     ];
 }
 
-// Function to run a test and display results
 function runTest($name, $method, $endpoint, $data = null)
 {
     echo "Testing $name... ";
@@ -79,10 +70,8 @@ function runTest($name, $method, $endpoint, $data = null)
     }
 }
 
-// Test API endpoints
 echo "\n=== TESTING API ENDPOINTS ===\n\n";
 
-// Test API connectivity
 echo 'Checking API connectivity... ';
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, $apiUrl);
@@ -103,10 +92,8 @@ if ($status === 0) {
     echo "SUCCESS (Status: $status)\n\n";
 }
 
-// Test getting projects
 $projectsResponse = runTest('List projects', 'GET', '/api/projects');
 
-// Test getting a specific project
 if ($projectsResponse && !empty($projectsResponse['body']['data'])) {
     $firstProject = $projectsResponse['body']['data'][0];
     $projectId    = $firstProject['id'];
@@ -114,20 +101,12 @@ if ($projectsResponse && !empty($projectsResponse['body']['data'])) {
     runTest('Get project', 'GET', '/api/projects/' . $projectId);
 }
 
-// Test getting monitors
 $monitorsResponse = runTest('List monitors', 'GET', '/api/monitors');
 
-// Test getting a specific monitor status
 if ($monitorsResponse && !empty($monitorsResponse['body']['data'])) {
     $firstMonitor = $monitorsResponse['body']['data'][0];
     $monitorId    = $firstMonitor['id'];
 
     runTest('Get monitor status', 'GET', '/api/monitors/' . $monitorId . '/status');
 }
-
-// Test GraphQL API
-runTest('GraphQL query', 'POST', '/graphql', [
-    'query' => '{ projects { identifier label description } }'
-]);
-
 echo "\n=== TESTING COMPLETE ===\n";

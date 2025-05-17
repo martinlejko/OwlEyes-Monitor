@@ -1,32 +1,16 @@
 <?php
 
-use DI\Container;
-use Slim\Factory\AppFactory;
+// No need for use statements here as they are in app.php
 
-require __DIR__ . '/../vendor/autoload.php';
+$app = require __DIR__ . '/../src/app.php';
 
-// Load environment variables
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+// The error middleware might be better placed within app.php or dependencies.php
+// depending on how it needs to interact with the container or other app settings.
+// For now, keeping it here if it was essential for index.php specifically.
+// However, typical Slim setup might add this in middleware.php or after app creation in app.php.
+// Consider moving addErrorMiddleware to app.php or a middleware configuration file if appropriate.
+// $errorMiddleware = $app->addErrorMiddleware(true, true, true); 
+// This ^ line might be problematic if $app from require doesn't allow immediate chaining
+// or if it's already added in the new app.php's included files (e.g. middleware.php)
 
-// Create Container
-$container = new Container();
-
-// Set container to create App with AppFactory
-AppFactory::setContainer($container);
-$app = AppFactory::create();
-
-// Add Error Middleware
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-
-// Add routes
-require __DIR__ . '/../src/routes.php';
-
-// Register middleware
-require __DIR__ . '/../src/middleware.php';
-
-// Register dependencies
-require __DIR__ . '/../src/dependencies.php';
-
-// Run app
-$app->run(); 
+$app->run();

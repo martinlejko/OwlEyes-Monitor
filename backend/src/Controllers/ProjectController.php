@@ -28,7 +28,6 @@ class ProjectController
         $sortBy      = $queryParams['sortBy']    ?? null;
         $sortOrder   = $queryParams['sortOrder'] ?? 'ASC';
 
-        // Handle tag filter
         $tagFilter = null;
         if (isset($queryParams['tags']) && is_string($queryParams['tags'])) {
             $tagFilter = explode(',', $queryParams['tags']);
@@ -90,14 +89,12 @@ class ProjectController
         $data = $request->getParsedBody();
 
         try {
-            // Validate input
             if (empty($data['label'])) {
                 $response->getBody()->write(json_encode(['error' => 'Project label is required']));
 
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
-            // Create project
             $project = new Project(
                 $data['label'],
                 $data['description'] ?? '',
@@ -123,7 +120,6 @@ class ProjectController
         $data = $request->getParsedBody();
 
         try {
-            // Check if project exists
             $project = $this->projectService->find($id);
 
             if (!$project) {
@@ -132,7 +128,6 @@ class ProjectController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Update project properties
             if (isset($data['label'])) {
                 $project->setLabel($data['label']);
             }
@@ -145,7 +140,6 @@ class ProjectController
                 $project->setTags($data['tags']);
             }
 
-            // Save changes
             $success = $this->projectService->update($project);
 
             if (!$success) {
@@ -170,7 +164,6 @@ class ProjectController
         $id = (int)$args['id'];
 
         try {
-            // Check if project exists
             $project = $this->projectService->find($id);
 
             if (!$project) {
@@ -179,7 +172,6 @@ class ProjectController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Delete project
             $success = $this->projectService->delete($id);
 
             if (!$success) {

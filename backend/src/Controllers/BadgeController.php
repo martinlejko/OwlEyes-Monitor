@@ -29,14 +29,12 @@ class BadgeController
         $id = (int)$args['id'];
 
         try {
-            // Get monitor
             $monitor = $this->monitorService->find($id);
 
             if (!$monitor) {
                 return $this->generateErrorBadge($response, 'Monitor not found');
             }
 
-            // Get latest status
             $latestStatus = $this->statusService->getLatestStatus($id);
 
             $label = $monitor->getBadgeLabel();
@@ -49,7 +47,6 @@ class BadgeController
                 'color' => $color
             ]);
 
-            // Generate badge
             $badge = $this->generateBadge($label, $value, $color);
 
             $response->getBody()->write($badge);
@@ -68,11 +65,9 @@ class BadgeController
 
     private function generateBadge(string $label, string $value, string $color): string
     {
-        // Escape values for XML
         $label = htmlspecialchars($label, ENT_XML1, 'UTF-8');
         $value = htmlspecialchars($value, ENT_XML1, 'UTF-8');
 
-        // Calculate widths
         $labelWidth = $this->calculateWidth($label);
         $valueWidth = $this->calculateWidth($value);
         $totalWidth = $labelWidth + $valueWidth;
@@ -115,13 +110,11 @@ SVG;
 
     private function calculateWidth(string $text): int
     {
-        // Estimate the width based on character count (6px per char + 10px padding on each side)
         return strlen($text) * 6 + 20;
     }
 
     private function calculateTextPosition(int $width, int $offset = 0): int
     {
-        // Center the text in its section
         return $offset + ($width / 2);
     }
 }

@@ -39,7 +39,6 @@ class MonitorController
         $labelFilter = $queryParams['label'] ?? null;
         $typeFilter  = $queryParams['type']  ?? null;
 
-        // Handle status filter
         $statusFilter = null;
         if (isset($queryParams['status'])) {
             $statusFilter = filter_var($queryParams['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -50,7 +49,6 @@ class MonitorController
             $total    = $this->monitorService->count($projectId, $labelFilter, $typeFilter, $statusFilter);
             $lastPage = ceil($total / $limit);
 
-            // Get latest status for each monitor
             $monitorsWithStatus = array_map(function (Monitor $monitor) {
                 $data         = $monitor->toArray();
                 $latestStatus = $this->statusService->getLatestStatus($monitor->getId());
@@ -98,7 +96,6 @@ class MonitorController
 
             $data = $monitor->toArray();
 
-            // Get latest status
             $latestStatus = $this->statusService->getLatestStatus($id);
             if ($latestStatus) {
                 $data['latestStatus'] = $latestStatus->toArray();
@@ -120,14 +117,12 @@ class MonitorController
         $data = $request->getParsedBody();
 
         try {
-            // Validate required fields
             if (empty($data['projectId']) || empty($data['label']) || empty($data['type']) || !isset($data['periodicity'])) {
                 $response->getBody()->write(json_encode(['error' => 'Required fields missing: projectId, label, type, periodicity']));
 
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
-            // Validate project exists
             $project = $this->projectService->find((int)$data['projectId']);
             if (!$project) {
                 $response->getBody()->write(json_encode(['error' => 'Project not found']));
@@ -135,7 +130,6 @@ class MonitorController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Create monitor
             $monitor = new Monitor(
                 (int)$data['projectId'],
                 $data['label'],
@@ -144,7 +138,6 @@ class MonitorController
                 $data['badgeLabel'] ?? $data['label']
             );
 
-            // Set type-specific fields
             if ($data['type'] === 'ping') {
                 if (empty($data['host']) || empty($data['port'])) {
                     $response->getBody()->write(json_encode(['error' => 'Ping monitor requires host and port']));
@@ -194,7 +187,6 @@ class MonitorController
         $data = $request->getParsedBody();
 
         try {
-            // Check if monitor exists
             $monitor = $this->monitorService->find($id);
 
             if (!$monitor) {
@@ -203,7 +195,6 @@ class MonitorController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Update basic properties
             if (isset($data['label'])) {
                 $monitor->setLabel($data['label']);
             }
@@ -216,7 +207,6 @@ class MonitorController
                 $monitor->setBadgeLabel($data['badgeLabel']);
             }
 
-            // Update type-specific properties
             if ($monitor->getType() === 'ping') {
                 if (isset($data['host'])) {
                     $monitor->setHost($data['host']);
@@ -239,7 +229,6 @@ class MonitorController
                 }
             }
 
-            // Save changes
             $success = $this->monitorService->update($monitor);
 
             if (!$success) {
@@ -269,10 +258,8 @@ class MonitorController
         $id = (int)$args['id'];
 
         try {
-            // Log the deletion attempt for debugging
             $this->logger->info('Attempting to delete monitor with ID: ' . $id);
 
-            // Check if monitor exists
             $monitor = $this->monitorService->find($id);
 
             if (!$monitor) {
@@ -282,10 +269,8 @@ class MonitorController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Store project ID for logging
             $projectId = $monitor->getProjectId();
 
-            // Delete monitor
             $success = $this->monitorService->delete($id);
 
             if (!$success) {
@@ -297,7 +282,6 @@ class MonitorController
 
             $this->logger->info('Successfully deleted monitor with ID: ' . $id . ' from project: ' . $projectId);
 
-            // Return 204 No Content on successful deletion
             return $response->withStatus(204);
         } catch (\Exception $e) {
             $this->logger->error('Error deleting monitor: ' . $e->getMessage());
@@ -323,7 +307,6 @@ class MonitorController
         $limit       = (int)($queryParams['limit'] ?? 10);
         $view        = $queryParams['view'] ?? 'list';
 
-        // Parse date filters
         $fromDate = null;
         if (!empty($queryParams['from'])) {
             try {
@@ -342,14 +325,12 @@ class MonitorController
             }
         }
 
-        // Parse status filter
         $statusFilter = null;
         if (isset($queryParams['status'])) {
             $statusFilter = filter_var($queryParams['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
 
         try {
-            // Validate monitor exists
             $monitor = $this->monitorService->find($id);
             if (!$monitor) {
                 $response->getBody()->write(json_encode(['error' => 'Monitor not found']));
@@ -357,10 +338,8 @@ class MonitorController
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
-            // Handle different view modes
             switch ($view) {
                 case 'calendar':
-                    // Use 3 months ago as default start date if not specified
                     if (!$fromDate) {
                         $fromDate = new \DateTime();
                         $fromDate->modify('-3 months');

@@ -473,7 +473,6 @@ JSON;
     {
         $this->logger->info('Swagger UI requested');
 
-        // Simple Swagger UI HTML
         $html = <<<HTML
 <!DOCTYPE html>
 <html lang="en">

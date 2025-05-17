@@ -26,7 +26,26 @@ jobs:
       - name: Run ESLint
         run: npm run lint -- --fix
 
-  backend:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Create .env file
+        run: cp .env.example .env
+      - name: Run backend tests
+        run: composer test
+
+  backend-lint-format:
     name: Backend Lint & Format
     runs-on: ubuntu-latest
     defaults:
@@ -40,9 +59,7 @@ jobs:
           php-version: '8.2'
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
-      - name: Run backend tests
-        run: composer test
-      - name: Run PHP-CS-Fixer 
+      - name: Run PHP-CS-Fixer
         run: vendor/bin/php-cs-fixer fix
       - name: Run PHP_CodeSniffer
         run: vendor/bin/phpcs -n --standard=PSR12 src/ 

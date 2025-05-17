@@ -47,7 +47,7 @@ jobs:
       - name: Create .env file
         run: cp .env.example .env
       - name: Run backend tests
-        run: php test
+        run: php -dzend_extension=xdebug.so vendor/bin/phpunit --testdox -vvv
 
   backend-lint-format:
     name: Backend Lint & Format

@@ -79,7 +79,9 @@ class ApiTest extends TestCase
         return $firstProject['id'];
     }
 
-
+    /**
+     * @depends testListProjects
+     */
     public function testGetProject($projectId)
     {
         $response = $this->callApi('GET', '/api/projects/' . $projectId);
@@ -109,6 +111,9 @@ class ApiTest extends TestCase
         $this->markTestSkipped('No monitors found to test with');
     }
 
+    /**
+     * @depends testListMonitors
+     */
     public function testGetMonitorStatus($monitorId)
     {
         if (!$monitorId) {

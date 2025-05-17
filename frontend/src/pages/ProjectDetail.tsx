@@ -48,7 +48,7 @@ import {
 } from '../services/api';
 import { Project, Monitor } from '../types';
 
-const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
+const Grid = MuiGrid as any;
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +59,6 @@ const ProjectDetail: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
 
-  // Filter states
   const [labelFilter, setLabelFilter] = useState('');
   const [debouncedLabelFilter, setDebouncedLabelFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'ping' | 'website'>('all');
@@ -67,12 +66,10 @@ const ProjectDetail: React.FC = () => {
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
 
-  // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Edit dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -91,29 +88,25 @@ const ProjectDetail: React.FC = () => {
     description: '',
   });
 
-  // Monitor delete states
   const [monitorDeleteDialogOpen, setMonitorDeleteDialogOpen] = useState(false);
   const [monitorToDelete, setMonitorToDelete] = useState<Monitor | null>(null);
   const [isDeletingMonitor, setIsDeletingMonitor] = useState(false);
   const [monitorDeleteError, setMonitorDeleteError] = useState<string | null>(null);
 
-  // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Debounce the label filter to avoid jittery UI
   useEffect(() => {
     setIsFiltering(true);
     const timerId = setTimeout(() => {
       setDebouncedLabelFilter(labelFilter);
       setIsFiltering(false);
-    }, 300); // 300ms debounce time
+    }, 300);
 
     return () => {
       clearTimeout(timerId);
     };
   }, [labelFilter]);
 
-  // Maintain focus when filter results change
   useEffect(() => {
     if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
       searchInputRef.current.focus();
@@ -127,15 +120,12 @@ const ProjectDetail: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Add cache-busting timestamp to prevent stale data
       const timestamp = new Date().getTime();
       console.log('Fetching project data with cache buster:', timestamp);
 
-      // Fetch project details
       const projectData = await getProject(parseInt(id));
       setProject(projectData);
 
-      // Fetch monitors for this project with filters
       let statusBool: boolean | undefined = undefined;
       if (statusFilter === 'up') statusBool = true;
       if (statusFilter === 'down') statusBool = false;
@@ -167,8 +157,8 @@ const ProjectDetail: React.FC = () => {
   }, [fetchData]);
 
   const getStatusColor = (status?: boolean): string => {
-    if (status === undefined) return '#9e9e9e'; // Gray for unknown
-    return status ? '#4caf50' : '#f44336'; // Green for up, red for down
+    if (status === undefined) return '#9e9e9e';
+    return status ? '#4caf50' : '#f44336';
   };
 
   const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,7 +200,6 @@ const ProjectDetail: React.FC = () => {
       if (id) {
         console.log('Confirming deletion of project ID:', id);
 
-        // Add cache-busting timestamp for navigation
         const timestamp = new Date().getTime();
 
         await deleteProject(parseInt(id));
@@ -218,7 +207,6 @@ const ProjectDetail: React.FC = () => {
 
         setDeleteDialogOpen(false);
 
-        // Navigate back to projects list with cache buster
         navigate(`/projects?_=${timestamp}`);
       }
     } catch (err) {
@@ -256,7 +244,6 @@ const ProjectDetail: React.FC = () => {
       [name]: value,
     });
 
-    // Clear error when user types
     if (editFormErrors[name as keyof typeof editFormErrors]) {
       setEditFormErrors({
         ...editFormErrors,
@@ -333,7 +320,6 @@ const ProjectDetail: React.FC = () => {
 
       setEditDialogOpen(false);
 
-      // Refresh the data
       fetchData();
     } catch (err) {
       console.error('Error updating project:', err);
@@ -343,9 +329,8 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
-  // Handle monitor deletion
   const handleMonitorDeleteClick = (event: React.MouseEvent, monitor: Monitor) => {
-    event.stopPropagation(); // Prevent navigating to monitor details
+    event.stopPropagation(); 
     setMonitorToDelete(monitor);
     setMonitorDeleteError(null);
     setMonitorDeleteDialogOpen(true);
@@ -365,7 +350,6 @@ const ProjectDetail: React.FC = () => {
 
       await deleteMonitor(monitorToDelete.id);
 
-      // Successfully deleted, refresh the monitors list
       fetchData();
 
       setMonitorDeleteDialogOpen(false);

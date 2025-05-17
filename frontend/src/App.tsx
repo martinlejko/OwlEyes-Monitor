@@ -10,9 +10,8 @@ import {
 } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import Layout from './components/Layout'; // Assuming Layout handles Navbar and Footer
+import Layout from './components/Layout';
 
-// Lazy load page components
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const MonitorDetail = lazy(() => import('./pages/MonitorDetail'));
@@ -23,7 +22,6 @@ const CreateProject = lazy(() => import('./pages/CreateProject'));
 const CreateMonitor = lazy(() => import('./pages/CreateMonitor'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 
-// Placeholder for new/detail pages that are not yet implemented
 const NotImplemented: React.FC<{ title: string }> = ({ title }) => (
   <Box sx={{ textAlign: 'center', mt: 4, p: 3 }}>
     <Typography variant="h5" gutterBottom>
@@ -35,7 +33,6 @@ const NotImplemented: React.FC<{ title: string }> = ({ title }) => (
   </Box>
 );
 
-// Create a QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -45,17 +42,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create a default theme (user can customize this later if needed)
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#3c5a72', // Example primary color
+      main: '#3c5a72',
     },
     secondary: {
-      main: '#e57373', // Example secondary color
+      main: '#e57373',
     },
     background: {
-      default: '#f5f8fa', // Light background for content area
+      default: '#f5f8fa',
     },
   },
   typography: {
@@ -65,14 +61,14 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none', // Common preference for button text
+          textTransform: 'none',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: '0px 1px 3px rgba(0,0,0,0.05), 0px 1px 2px rgba(0,0,0,0.05)', // Softer default shadow
+          boxShadow: '0px 1px 3px rgba(0,0,0,0.05), 0px 1px 2px rgba(0,0,0,0.05)',
         },
       },
     },
@@ -100,25 +96,19 @@ const App: React.FC = () => {
             }
           >
             <Layout>
-              {' '}
-              {/* Wrap routes with Layout */}
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/about" element={<LandingPage />} />
 
-                {/* Project Routes */}
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/projects/new" element={<CreateProject />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
-                {/* <Route path="/projects/:id/edit" element={<NotImplemented title="Edit Project Details" />} /> */}
 
-                {/* Monitor Routes */}
                 <Route path="/monitors" element={<MonitorsPage />} />
                 <Route path="/monitors/new" element={<CreateMonitor />} />
                 <Route path="/monitors/:id" element={<MonitorDetail />} />
                 <Route path="/monitors/:id/edit" element={<EditMonitor />} />
 
-                {/* Redirect for any other path */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>

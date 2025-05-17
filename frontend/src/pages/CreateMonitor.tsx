@@ -29,7 +29,7 @@ import {
 import { createMonitor, getProjects } from '../services/api';
 import { Project, Monitor, PingMonitor, WebsiteMonitor } from '../types';
 
-const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
+const Grid = MuiGrid as any;
 
 const CreateMonitor: React.FC = () => {
   const navigate = useNavigate();
@@ -47,21 +47,18 @@ const CreateMonitor: React.FC = () => {
     badgeLabel: '',
     periodicity: 60,
     projectId: projectId ? parseInt(projectId) : undefined,
-    // Ping specific fields
     host: '',
     port: null,
-    // Website specific fields
     url: '',
     checkStatus: false,
     keywords: [],
   });
 
-  // Fetch projects for the dropdown
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await getProjects(1, 100); // Get up to 100 projects
+        const response = await getProjects(1, 100);
         setProjects(response.data);
         setLoading(false);
       } catch (err) {
@@ -77,7 +74,6 @@ const CreateMonitor: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
-    // Convert numeric fields
     if (name === 'periodicity' || name === 'port') {
       const numValue = value === '' ? null : parseInt(value);
       setFormData({
@@ -91,7 +87,6 @@ const CreateMonitor: React.FC = () => {
       });
     }
 
-    // Clear error when user types
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -103,7 +98,6 @@ const CreateMonitor: React.FC = () => {
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
 
-    // For projectId, convert to number
     if (name === 'projectId') {
       setFormData({
         ...formData,
@@ -116,7 +110,6 @@ const CreateMonitor: React.FC = () => {
       });
     }
 
-    // Clear error when user selects
     if (formErrors[name]) {
       setFormErrors({
         ...formErrors,
@@ -176,9 +169,7 @@ const CreateMonitor: React.FC = () => {
       setSaving(true);
       setError(null);
 
-      // Create type-specific monitor data
       if (formData.type === 'ping') {
-        // For ping monitors, ensure port is numeric (required by backend)
         const pingMonitorData: Omit<PingMonitor, 'id' | 'latestStatus'> = {
           label: formData.label.trim(),
           badgeLabel: formData.badgeLabel.trim(),
@@ -204,7 +195,6 @@ const CreateMonitor: React.FC = () => {
           setSaving(false);
         }
       } else if (formData.type === 'website') {
-        // For website monitors, ensure checkStatus is boolean and keywords is an array
         const websiteMonitorData: Omit<WebsiteMonitor, 'id' | 'latestStatus'> = {
           label: formData.label.trim(),
           badgeLabel: formData.badgeLabel.trim(),
@@ -368,7 +358,6 @@ const CreateMonitor: React.FC = () => {
               />
             </Grid>
 
-            {/* Type-specific fields */}
             {formData.type === 'ping' && (
               <>
                 <Grid size={{ xs: 12, md: 8 }}>

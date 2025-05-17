@@ -52,7 +52,6 @@ const EditMonitor: React.FC = () => {
           type: monitorData.type,
           badgeLabel: monitorData.badgeLabel,
           periodicity: monitorData.periodicity,
-          // Add type-specific fields based on the monitor type
           ...(monitorData.type === 'ping'
             ? {
                 host: (monitorData as any).host,
@@ -137,29 +136,23 @@ const EditMonitor: React.FC = () => {
     try {
       setSaving(true);
 
-      // Create a complete update object with all required fields
       const updateData: Record<string, any> = {
         label: formData.label,
         badgeLabel: formData.badgeLabel,
-        periodicity: parseInt((formData.periodicity || 60).toString()), // Use 60 as fallback
-        type: formData.type, // Explicitly include the type
+        periodicity: parseInt((formData.periodicity || 60).toString()),
+        type: formData.type,
       };
 
-      // Add type-specific fields
       if (formData.type === 'ping') {
-        // For ping monitors
         updateData.host = formData.host || '';
         updateData.port = formData.port ? parseInt(formData.port.toString()) : null;
-        // Set website fields to null/empty
         updateData.url = null;
         updateData.checkStatus = false;
         updateData.keywords = [];
       } else if (formData.type === 'website') {
-        // For website monitors
         updateData.url = formData.url || '';
-        updateData.checkStatus = false; // Default if not provided
-        updateData.keywords = []; // Default if not provided
-        // Set ping fields to null/empty
+        updateData.checkStatus = false;
+        updateData.keywords = [];
         updateData.host = null;
         updateData.port = null;
       }

@@ -15,7 +15,6 @@ import {
 } from 'chart.js';
 import { GraphDataPoint } from '../../types';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,

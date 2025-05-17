@@ -127,13 +127,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Toolbar>
       </AppBar>
       <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
-        {/* Mobile drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile
+            keepMounted: true
           }}
           sx={{
             display: { xs: 'block', md: 'none' },
@@ -143,7 +142,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {drawer}
         </Drawer>
 
-        {/* Desktop drawer */}
         <Drawer
           variant="permanent"
           sx={{

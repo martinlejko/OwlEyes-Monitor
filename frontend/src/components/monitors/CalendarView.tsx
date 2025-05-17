@@ -22,12 +22,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   loading,
   monitorId,
 }) => {
-  // Add local state to store data if parent component data is empty
   const [localData, setLocalData] = useState<CalendarDataPoint[]>([]);
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data directly if parent component didn't provide any and we have monitorId
   useEffect(() => {
     const fetchCalendarData = async () => {
       if ((data.length === 0 || error) && monitorId) {
@@ -35,7 +33,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         setError(null);
 
         try {
-          // First attempt: check if there's any data in the last year
           const today = new Date();
           const lastYear = new Date(today);
           lastYear.setFullYear(lastYear.getFullYear() - 1);
@@ -44,13 +41,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             monitorId,
             1,
             1000,
-            lastYear, // Look back one full year
+            lastYear, 
             today,
             undefined,
             'calendar',
           );
 
-          // Type assertion
           const calendarResponse = response as { data: CalendarDataPoint[] };
 
           if (Array.isArray(calendarResponse.data)) {
@@ -81,7 +77,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     fetchCalendarData();
   }, [data.length, monitorId, error]);
 
-  // Use localData if we have it, otherwise use props data
   const displayData = localData.length > 0 ? localData : data;
   const isLoading = loading || localLoading;
 
@@ -140,22 +135,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               );
               const dayData = monthData.find((d) => d.date === dateStr);
 
-              let bgColor = '#eeeeee'; // Default gray for no data
+              let bgColor = '#eeeeee';
               let statusText = 'No data';
 
               if (dayData) {
                 if (dayData.total === 0) {
-                  // Check for no actual pings first
-                  bgColor = '#eeeeee'; // No data color
+                  bgColor = '#eeeeee';
                   statusText = 'No data';
                 } else if (dayData.status === 'success') {
-                  bgColor = '#4caf50'; // Green for success
+                  bgColor = '#4caf50';
                   statusText = '100% uptime';
                 } else if (dayData.status === 'warning') {
-                  bgColor = '#ff9800'; // Orange for warning (≤ 5% failures)
+                  bgColor = '#ff9800';
                   statusText = `${((dayData.failed / dayData.total) * 100).toFixed(1)}% failures`;
                 } else if (dayData.status === 'danger') {
-                  bgColor = '#f44336'; // Red for danger (> 5% failures)
+                  bgColor = '#f44336';
                   statusText = `${((dayData.failed / dayData.total) * 100).toFixed(1)}% failures`;
                 }
               }

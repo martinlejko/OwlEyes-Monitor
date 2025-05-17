@@ -30,16 +30,13 @@ const Dashboard: React.FC = () => {
       try {
         setLoading(true);
 
-        // Fetch projects
         const projectsResponse = await getProjects(1, 5);
         setProjects(projectsResponse.data);
         setStats((prev) => ({ ...prev, totalProjects: projectsResponse.meta.total }));
 
-        // Fetch monitors
         const monitorsResponse = await getMonitors(1, 10);
         setRecentMonitors(monitorsResponse.data);
 
-        // Calculate stats
         const totalMonitors = monitorsResponse.meta.total;
         let upCount = 0;
         let downCount = 0;

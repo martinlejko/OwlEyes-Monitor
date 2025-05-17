@@ -17,7 +17,6 @@ import {
   GraphDataPoint,
 } from '../types';
 
-// Import our modular components
 import {
   TabPanel,
   ListView,
@@ -33,40 +32,31 @@ const MonitorDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // States for monitor data and loading
   const [monitor, setMonitor] = useState<Monitor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // States for status list view
   const [statuses, setStatuses] = useState<MonitorStatus[]>([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalStatusCount, setTotalStatusCount] = useState(0);
 
-  // States for calendar view
   const [calendarData, setCalendarData] = useState<CalendarDataPoint[]>([]);
 
-  // States for graph view
   const [graphData, setGraphData] = useState<GraphDataPoint[]>([]);
 
-  // States for tab navigation
   const [tabValue, setTabValue] = useState(0);
 
-  // States for delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // States for status filtering
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
-  // Ref for auto-update interval
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Add new state for refresh loading
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchMonitor = async () => {
@@ -90,7 +80,6 @@ const MonitorDetail: React.FC = () => {
       let to: Date | undefined = undefined;
       let statusFilterValue: boolean | undefined = undefined;
 
-      // Handle filters - only apply for list view
       if (viewMode === 0) {
         if (dateFrom) {
           from = new Date(dateFrom);
@@ -98,7 +87,6 @@ const MonitorDetail: React.FC = () => {
 
         if (dateTo) {
           to = new Date(dateTo);
-          // Set time to end of day
           to.setHours(23, 59, 59, 999);
         }
 
@@ -113,11 +101,9 @@ const MonitorDetail: React.FC = () => {
         `Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`,
       );
 
-      // Fetch data based on view mode - preserving the current state
-      const currentViewMode = viewMode; // Ensure we use the passed viewMode
+      const currentViewMode = viewMode; 
 
       if (currentViewMode === 0) {
-        // List view
         const response = await getMonitorStatuses(
           monitorId,
           page + 1,
@@ -128,32 +114,26 @@ const MonitorDetail: React.FC = () => {
           'list',
         );
 
-        // Type assertion since we know the structure based on view
         const listResponse = response as PaginatedResponse<MonitorStatus>;
         setStatuses(listResponse.data);
         setTotalStatusCount(listResponse.meta.total);
       } else if (currentViewMode === 1) {
-        // Calendar view
-        // For calendar view, always use a fixed 3-month range and don't apply filters
-        const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
-        const toDate = new Date(); // To today
+        const fromDate = startOfMonth(subMonths(new Date(), 2));
+        const toDate = new Date();
 
         const response = await getMonitorStatuses(
           monitorId,
           1,
-          1000, // Large enough to ensure we get all needed data
+          1000, 
           fromDate,
           toDate,
-          undefined, // Don't use status filter for calendar view
+          undefined, 
           'calendar',
         );
 
-        // Type assertion
         const calendarResponse = response as { data: CalendarDataPoint[] };
         setCalendarData(calendarResponse.data);
       } else if (currentViewMode === 2) {
-        // Graph view
-        // For graph view, always use a fixed 1-month range and don't apply filters
         const fromDate = subMonths(new Date(), 1);
         const toDate = new Date();
 
@@ -163,19 +143,16 @@ const MonitorDetail: React.FC = () => {
           100,
           fromDate,
           toDate,
-          undefined, // Don't use status filter for graph view
+          undefined,
           'graph',
         );
 
-        // Type assertion
         const graphResponse = response as { data: GraphDataPoint[] };
         setGraphData(graphResponse.data);
       }
 
-      // Only set loading to false once all operations complete
       setLoading(false);
 
-      // Log successful completion with preserved filter values
       console.log('Status data fetch complete with preserved filters:', {
         viewMode: currentViewMode,
         statusFilter,
@@ -194,10 +171,8 @@ const MonitorDetail: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // First fetch the monitor data
     await fetchMonitor();
 
-    // Then fetch status data with current filters preserved
     const currentTabValue = tabValue;
     console.log('Initial data fetch with preserved filters:', {
       tabValue: currentTabValue,
@@ -210,16 +185,12 @@ const MonitorDetail: React.FC = () => {
     await fetchStatusData(currentTabValue);
   };
 
-  // Initialize data
   useEffect(() => {
     fetchData();
 
-    // Set up live updates with a reference to the current state values
     updateIntervalRef.current = setInterval(() => {
-      // Only refresh monitor data without refreshing status data if filters are applied
       fetchMonitor();
 
-      // Create a closure to capture the current filter state values
       const capturedTabValue = tabValue;
       const capturedStatusFilter = statusFilter;
       const capturedDateFrom = dateFrom;
@@ -235,22 +206,17 @@ const MonitorDetail: React.FC = () => {
         page: capturedPage,
       });
 
-      // Pass all current state to ensure filters are preserved
       fetchStatusData(capturedTabValue);
-    }, 5000); // 5 seconds update interval
+    }, 5000);
 
     return () => {
-      // Clean up interval on component unmount
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current);
       }
     };
   }, [id]);
 
-  // Fetch data when filters or pagination change
   useEffect(() => {
-    // Skip on initial render as fetchData will handle it
-    // Note: we need to check if loading is false AND we have monitor data
     if (!loading && monitor) {
       console.log('Filter changed, refreshing data with:', {
         tabValue,
@@ -278,7 +244,7 @@ const MonitorDetail: React.FC = () => {
 
   const handleStatusFilterChange = (event: any) => {
     setStatusFilter(event.target.value);
-    setPage(0); // Reset to first page on filter change
+    setPage(0);
   };
 
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -288,14 +254,12 @@ const MonitorDetail: React.FC = () => {
     } else if (name === 'dateTo') {
       setDateTo(value);
     }
-    setPage(0); // Reset to first page on filter change
+    setPage(0);
   };
 
   const handleRefresh = async () => {
-    // Set refreshing state to true to show loading indicator
     setRefreshing(true);
 
-    // Create local variables to ensure current state is used
     const currentTabValue = tabValue;
     const currentStatusFilter = statusFilter;
     const currentDateFrom = dateFrom;
@@ -309,14 +273,10 @@ const MonitorDetail: React.FC = () => {
     });
 
     try {
-      // Explicitly call fetchStatusData with current tabValue and preserve all filters
       await fetchStatusData(currentTabValue);
-      // Flash a success message or indication here if needed
     } catch (error) {
       console.error('Error during manual refresh:', error);
-      // Handle any errors during refresh
     } finally {
-      // Reset refreshing state after a short delay to make the loading indicator visible
       setTimeout(() => {
         setRefreshing(false);
       }, 500);
@@ -326,24 +286,19 @@ const MonitorDetail: React.FC = () => {
   const handleResetFilters = async () => {
     console.log('Resetting all filters to default values');
 
-    // Show loading indicator
     setRefreshing(true);
 
-    // Reset filter states to their defaults
     setStatusFilter('all');
     setDateFrom('');
     setDateTo('');
-    // Also reset to the first page
     setPage(0);
 
     try {
-      // Fetch data with the reset filters
       console.log('Fetching data with reset filters');
       await fetchStatusData(tabValue);
     } catch (error) {
       console.error('Error during filter reset:', error);
     } finally {
-      // Reset refreshing state after a short delay
       setTimeout(() => {
         setRefreshing(false);
       }, 500);
@@ -376,7 +331,6 @@ const MonitorDetail: React.FC = () => {
 
         setDeleteDialogOpen(false);
 
-        // After successful deletion, navigate back to project or dashboard
         if (monitor?.projectId) {
           const projectId = monitor.projectId;
           console.log(
@@ -384,7 +338,6 @@ const MonitorDetail: React.FC = () => {
             `/projects/${projectId}?_=${timestamp}`,
           );
 
-          // Use React Router navigation instead of direct location change
           navigate(`/projects/${projectId}?_=${timestamp}`);
         } else {
           console.log('Navigating to dashboard with cache buster');
@@ -395,19 +348,15 @@ const MonitorDetail: React.FC = () => {
       console.error('Detailed error object when deleting monitor:', error);
       let displayErrorMessage = 'Failed to delete monitor. Please try again later.';
       if (error.isAxiosError && error.response) {
-        // Server responded with an error status code (4xx or 5xx)
         if (error.response.data && typeof error.response.data.error === 'string') {
           displayErrorMessage = error.response.data.error;
         } else {
-          // Response data is not in the expected format, or no specific error message from backend
           displayErrorMessage =
             `Server error: ${error.response.status} ${error.response.statusText || ''}`.trim();
         }
       } else if (error.isAxiosError && error.request) {
-        // The request was made but no response was received
         displayErrorMessage = 'No response from server. Check network connection or server status.';
       } else {
-        // Something happened in setting up the request that triggered an Error, or a non-Axios error
         displayErrorMessage = error.message || 'An unexpected error occurred.';
       }
       setDeleteError(displayErrorMessage);
@@ -463,7 +412,6 @@ const MonitorDetail: React.FC = () => {
 
   return (
     <Box>
-      {/* Monitor header with actions */}
       <MonitorHeader
         monitor={monitor}
         onEdit={handleEditClick}
@@ -471,14 +419,12 @@ const MonitorDetail: React.FC = () => {
         onBack={handleGoBack}
       />
 
-      {/* Monitor history section */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom>
           Monitor History
         </Typography>
 
         <Paper sx={{ width: '100%' }}>
-          {/* Tab navigation */}
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs
               value={tabValue}
@@ -507,7 +453,6 @@ const MonitorDetail: React.FC = () => {
             </Tabs>
           </Box>
 
-          {/* Filters - only show for List view */}
           {tabValue === 0 && (
             <FilterBar
               statusFilter={statusFilter}
@@ -521,7 +466,6 @@ const MonitorDetail: React.FC = () => {
             />
           )}
 
-          {/* List View */}
           <TabPanel value={tabValue} index={0}>
             <ListView
               statuses={statuses}
@@ -534,7 +478,6 @@ const MonitorDetail: React.FC = () => {
             />
           </TabPanel>
 
-          {/* Calendar View */}
           <TabPanel value={tabValue} index={1}>
             <CalendarView
               data={calendarData}
@@ -544,17 +487,14 @@ const MonitorDetail: React.FC = () => {
             />
           </TabPanel>
 
-          {/* Graph View */}
           <TabPanel value={tabValue} index={2}>
             <GraphView data={graphData} onRefresh={handleRefresh} loading={loading} />
           </TabPanel>
         </Paper>
       </Box>
 
-      {/* Badge section */}
       <BadgeSection monitorId={monitor.id} badgeLabel={monitor.badgeLabel} />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteDialog
         open={deleteDialogOpen}
         title="Delete Monitor"

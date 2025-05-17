@@ -46,18 +46,17 @@ import {
 import { getProjects, deleteProject, FilterParams } from '../services/api';
 import { Project } from '../types';
 
-const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
+const Grid = MuiGrid as any;
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [page, setPage] = useState(0); // 0-indexed for MUI TablePagination
+  const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalProjects, setTotalProjects] = useState(0);
 
-  // Filter and sort states
   const [labelFilter, setLabelFilter] = useState('');
   const [debouncedLabelFilter, setDebouncedLabelFilter] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -65,33 +64,27 @@ const ProjectsPage: React.FC = () => {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [filtersVisible, setFiltersVisible] = useState(false);
 
-  // Delete dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Add a ref for the search input to maintain focus
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Add a state to track if filtering is in progress
   const [isFiltering, setIsFiltering] = useState(false);
 
-  // Maintain focus when filter results change
   useEffect(() => {
-    // Keep focus in the input field when results change
     if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [projects, error]);
 
-  // Debounce the label filter to avoid jittery UI
   useEffect(() => {
     setIsFiltering(true);
     const timerId = setTimeout(() => {
       setDebouncedLabelFilter(labelFilter);
       setIsFiltering(false);
-    }, 300); // 300ms debounce time
+    }, 300);
 
     return () => {
       clearTimeout(timerId);
@@ -102,7 +95,6 @@ const ProjectsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Updated API call with filter and sort parameters
       const filterParams: FilterParams = {
         labelFilter: debouncedLabelFilter,
         tags: selectedTags,
@@ -114,7 +106,6 @@ const ProjectsPage: React.FC = () => {
       setProjects(response.data);
       setTotalProjects(response.meta.total);
 
-      // Extract all unique tags from projects for the filter dropdown
       if (response.data.length > 0 && availableTags.length === 0) {
         const allTags = response.data
           .flatMap((project) => project.tags || [])
@@ -147,19 +138,17 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleLabelFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent default behavior that might cause page refreshes
     event.preventDefault();
     setLabelFilter(event.target.value);
   };
 
-  // Reset page when debounced filter changes
   useEffect(() => {
     setPage(0);
   }, [debouncedLabelFilter]);
 
   const handleTagsChange = (_event: React.SyntheticEvent, value: string[]) => {
     setSelectedTags(value);
-    setPage(0); // Reset to first page when changing filters
+    setPage(0);
   };
 
   const handleSortDirectionChange = () => {
@@ -178,9 +167,8 @@ const ProjectsPage: React.FC = () => {
     setPage(0);
   };
 
-  // Handle delete project
   const handleDeleteClick = (event: React.MouseEvent, project: Project) => {
-    event.stopPropagation(); // Prevent navigating to project details
+    event.stopPropagation();
     setProjectToDelete(project);
     setDeleteError(null);
     setDeleteDialogOpen(true);
@@ -200,7 +188,6 @@ const ProjectsPage: React.FC = () => {
 
       await deleteProject(projectToDelete.id);
 
-      // Successfully deleted, refresh the list
       fetchProjects();
 
       setDeleteDialogOpen(false);
@@ -214,7 +201,6 @@ const ProjectsPage: React.FC = () => {
   };
 
   if (loading && projects.length === 0) {
-    // Show main loading only on initial load
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
         <LinearProgress sx={{ mb: 2 }} />
@@ -296,7 +282,6 @@ const ProjectsPage: React.FC = () => {
                   value={labelFilter}
                   onChange={handleLabelFilterChange}
                   inputRef={searchInputRef}
-                  // Prevent lost focus and prevent form submission
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -410,7 +395,7 @@ const ProjectsPage: React.FC = () => {
                         color="text.secondary"
                         sx={{
                           mb: 1.5,
-                          minHeight: '60px', // Adjust for 3 lines approx
+                          minHeight: '60px',
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
@@ -485,7 +470,6 @@ const ProjectsPage: React.FC = () => {
         )}
       </Paper>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}

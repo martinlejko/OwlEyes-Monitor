@@ -23,7 +23,7 @@ import {
 } from '@mui/icons-material';
 import { createProject } from '../services/api';
 
-const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
+const Grid = MuiGrid as any;
 
 const CreateProject: React.FC = () => {
   const navigate = useNavigate();
@@ -31,17 +31,14 @@ const CreateProject: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     label: '',
     description: '',
     tags: [] as string[],
   });
 
-  // New tag input state
   const [newTag, setNewTag] = useState('');
 
-  // Form validation errors
   const [formErrors, setFormErrors] = useState({
     label: '',
     description: '',
@@ -54,7 +51,6 @@ const CreateProject: React.FC = () => {
       [name]: value,
     });
 
-    // Clear error when user types
     if (formErrors[name as keyof typeof formErrors]) {
       setFormErrors({
         ...formErrors,
@@ -133,7 +129,6 @@ const CreateProject: React.FC = () => {
 
       setSuccess(true);
 
-      // Redirect to the newly created project after a short delay
       setTimeout(() => {
         navigate(`/projects/${newProject.id}`);
       }, 1500);

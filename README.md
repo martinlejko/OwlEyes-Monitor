@@ -1,161 +1,206 @@
-# OwlEyes Monitoring Service
+<div align="center">
 
-OwlEyes is a comprehensive monitoring solution that helps you track the status of your services in real-time. Create projects, set up monitors, and never miss downtime again.
+# 🦉 OwlEyes
 
-## Features
+### 🔍 Modern Web Service Monitoring Solution
 
-- **Project Management**: Create and organize multiple projects with custom labels, descriptions, and tags
-- **Ping Monitoring**: Check if your servers are up by establishing TCP connections
-- **Website Monitoring**: Monitor websites for availability, status codes, and specific content
-- **Status Badges**: Add status badges to your README or website to show real-time monitoring status
-- **Multiple Views**: View monitor history in list, calendar, or graph mode with real-time updates
-- **API Access**: Access all functionality through RESTful API.
+[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square&logo=react)](https://reactjs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=flat-square&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-## Technology Stack
+</div>
 
-- **Backend**: PHP 8.1 with Slim Framework
-- **Frontend**: React with TypeScript and Material UI
-- **Database**: PostgreSQL
-- **Infrastructure**: Docker and Docker Compose
+## ✨ Overview
 
-## Getting Started
+OwlEyes is an elegant, self-hosted monitoring solution that keeps a vigilant eye on your websites and services. With an intuitive interface and powerful monitoring capabilities, OwlEyes helps you ensure maximum uptime and performance for your digital assets.
+
+<p align="center">
+  <img src="https://via.placeholder.com/800x400?text=OwlEyes+Dashboard" alt="OwlEyes Dashboard" width="80%"/>
+</p>
+
+## ⚡ Key Features
+
+- 🔍 **Comprehensive Monitoring**
+  - 🌐 Website availability & content verification
+  - 🔄 TCP/Ping service checks
+  - ⏱️ Response time tracking
+
+- 📊 **Insightful Visualizations**
+  - 📋 Clean list view of monitor results
+  - 📅 Calendar view showing uptime percentage by day
+  - 📈 Interactive performance graphs 
+
+- 🔧 **Flexible Organization**
+  - 📁 Group monitors into logical projects
+  - 🏷️ Tag-based filtering and organization
+  - 📝 Detailed descriptions and documentation
+
+- 🛠️ **Developer-Friendly**
+  - 🔌 RESTful API for integration
+  - 🧩 GraphQL support for flexible queries
+  - 🔖 Embeddable status badges for your documentation
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Git
+- 🐳 [Docker](https://www.docker.com/get-started) and Docker Compose
+- 🧰 Git
 
 ### Installation
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/martinlejko/OwlEyes-Monitor.git
-   cd owleyes
-   ```
-
-2. Copy environment files
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-
-3. Start the application
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Access the application
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000/api
-   - API Documentation: http://localhost:8000/api-docs
-
-## Development
-
-### Backend
-
-The backend is built with PHP 8.2 using the Slim Framework. It provides a RESTful API for interacting with the application.
+1. **Clone the repository**
 
 ```bash
-# Enter the backend container
-docker exec -it owleyes-backend bash
-
-# Run composer commands
-composer install
+git clone https://github.com/martinlejko/OwlEyes.git
+cd OwlEyes
 ```
 
-#### PHP Linting & Formatting
-
-The backend uses [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) for linting and [PHP-CS-Fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer) for code formatting, both enforcing the PSR-12 standard.
-
-- **Check for linting issues:**
-  ```bash
-  php vendor/bin/phpcs --standard=PSR12 src tests check_monitors.php
-  ```
-- **Automatically fix fixable issues:**
-  ```bash
-  php vendor/bin/phpcbf --standard=PSR12 src tests check_monitors.php
-  ```
-- **Format code with PHP-CS-Fixer:**
-  ```bash
-  php vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --allow-risky=yes
-  ```
-
-> All tools are installed via Composer and available in the backend container. The configuration for PHP-CS-Fixer is in `.php-cs-fixer.dist.php`.
-
-### Frontend
-
-The frontend is built with React, TypeScript, and Material UI. It provides a user-friendly interface for managing projects and monitors.
+2. **Create your environment configuration**
 
 ```bash
-# Install dependencies
+cp .env.example .env
+# Edit .env with your preferred settings
+```
+
+3. **Run the setup script**
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+4. **Start the application**
+
+```bash
+docker compose up -d
+```
+
+5. **Access the application**
+   - 🖥️ **Frontend**: [http://localhost:3000](http://localhost:3000)
+   - 🔌 **Backend API**: [http://localhost:8080](http://localhost:8080)
+   - 📚 **API Documentation**: [http://localhost:8080/docs](http://localhost:8080/docs)
+
+## 📖 Usage Guide
+
+### Creating a Project
+
+1. Navigate to the Projects page
+2. Click the ➕ button to add a new project
+3. Enter project details:
+   - 📝 Label (name of your project)
+   - 📄 Description (what you're monitoring)
+   - 🏷️ Tags (for organization)
+4. Save your new project
+
+### Adding a Monitor
+
+1. Open a project
+2. Click the "Add Monitor" button
+3. Select the monitor type:
+   - 🌐 **Website Monitor**: Checks if a website is available and contains specific keywords
+   - 🔄 **Ping Monitor**: Checks if a server is reachable via TCP connection
+4. Configure settings:
+   - 🔗 URL or host/port to monitor
+   - ⏱️ Check frequency (5-300 seconds)
+   - 🔍 Content verification keywords (for websites)
+5. Save your new monitor
+
+### Viewing Monitor Status
+
+Explore your monitoring data through multiple views:
+
+- 📋 **List View**: Chronological history of status checks
+- 📅 **Calendar View**: Color-coded uptime calendar
+- 📈 **Graph View**: Performance trends over time
+
+### Using Status Badges
+
+Add live status indicators to your documentation or website:
+
+```markdown
+![Monitor Status](http://localhost:8080/api/v1/monitors/{id}/badge)
+```
+
+## 🏗️ Architecture
+
+OwlEyes follows a modern microservices architecture with containerized components:
+
+### Backend Stack
+
+- 🔧 **PHP 8.2** with Slim 4 Framework
+- 🗃️ **Doctrine ORM** for database access
+- 💾 **MySQL** database
+- 📝 **Monolog** for logging
+- 🧩 **PHP-DI** for dependency injection
+- 🔌 **GraphQL** with webonyx/graphql-php
+
+### Frontend Stack
+
+- ⚛️ **React 18** with React Router
+- 🎨 **Material UI** for responsive components
+- 📊 **Chart.js** for data visualization
+- 📅 **FullCalendar** for calendar view
+
+### Infrastructure
+
+- 🐳 **Docker** and Docker Compose for containerization
+- 🌐 **Nginx** as web server
+
+## 🧪 Development
+
+### Backend Development
+
+```bash
+# Start only backend services
+docker compose up -d backend db
+
+# Run PHP code style checks
+docker compose exec backend composer cs-check
+
+# Run tests
+docker compose exec backend composer test
+```
+
+### Frontend Development
+
+```bash
+# Start frontend in development mode
+docker compose up -d frontend
+
+# Or run locally with npm
 cd frontend
 npm install
-
-# Start development server
 npm run dev
 ```
 
-### Database
+## 🤝 Contributing
 
-The database is PostgreSQL and is automatically initialized with the schema and sample data when the container starts.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Testing
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Backend Tests
+## 📄 License
 
-The application includes a comprehensive test suite for the backend:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```bash
-# Enter the backend container
-docker exec -it owleyes-backend bash
+## 🙏 Acknowledgements
 
-# Run all tests
-composer test
+- [Slim Framework](https://www.slimframework.com/) - PHP micro framework
+- [Doctrine ORM](https://www.doctrine-project.org/) - Object-relational mapper
+- [React](https://reactjs.org/) - Frontend library
+- [Material UI](https://mui.com/) - React component library
+- [Vite](https://vitejs.dev/) - Frontend build tool
 
-# Run only unit tests
-composer test:unit
+---
 
-# Run only integration tests
-composer test:integration
-```
+<div align="center">
 
-Test types:
-- **Unit Tests**: Test individual components in isolation
-- **Integration Tests**: Test API endpoints and component interactions
+Made with ❤️ by [Martin Lejko](https://github.com/martinlejko)
 
-For more details, see [backend/tests/README.md](backend/tests/README.md).
-
-## API Documentation
-
-### REST API
-
-The REST API provides endpoints for managing projects, monitors, and accessing monitor statuses.
-
-- `GET /api/projects` - List all projects
-- `GET /api/projects/{id}` - Get a specific project
-- `POST /api/projects` - Create a new project
-- `PUT /api/projects/{id}` - Update a project
-- `DELETE /api/projects/{id}` - Delete a project
-- `GET /api/monitors` - List all monitors
-- `GET /api/monitors/{id}` - Get a specific monitor
-- `POST /api/monitors` - Create a new monitor
-- `PUT /api/monitors/{id}` - Update a monitor
-- `DELETE /api/monitors/{id}` - Delete a monitor
-- `GET /api/monitors/{id}/status` - Get status history for a monitor
-- `GET /badge/{id}` - Get a status badge for a monitor
-
-You can access the interactive API documentation at:
-- OpenAPI JSON: http://localhost:8000/docs
-- Swagger UI: http://localhost:8000/api-docs
-
-### Status Badge API
-
-You can embed status badges in your README or website using the following URL format:
-```
-http://localhost:8000/badge/{monitorId}
-```
-
-This returns an SVG badge showing the current status of your monitor (up/down).
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+</div>

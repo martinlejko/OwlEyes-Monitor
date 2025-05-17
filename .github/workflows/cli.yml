@@ -44,41 +44,10 @@ jobs:
         run: rm -rf vendor
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader -vvv
-      - name: Debug Composer Autoload and File Structure
-        run: |
-          echo "### PHP Version ###"
-          php --version
-          echo "### Composer Version ###"
-          composer --version
-          echo "### Composer.json (name, autoload, autoload-dev) ###"
-          cat composer.json | grep -A 6 -E '"name"|"autoload"'
-          echo "### Composer Show Self (root package) ###"
-          composer show --self || echo "COMMAND 'composer show --self' FAILED"
-          echo "### Explicitly dump autoloader again ###"
-          composer dump-autoload --optimize -vvv
-          echo "### AUTOLOAD_PSR4.PHP (check for Martinlejko) ###"
-          echo "Contents of vendor/composer/autoload_psr4.php:"
-          cat vendor/composer/autoload_psr4.php
-          grep Martinlejko vendor/composer/autoload_psr4.php || echo "NO 'Martinlejko' PSR-4 ENTRIES"
-          echo "### AUTOLOAD_CLASSMAP.PHP (check for Martinlejko) ###"
-          echo "Contents of vendor/composer/autoload_classmap.php:"
-          cat vendor/composer/autoload_classmap.php || echo "autoload_classmap.php NOT FOUND"
-          grep Martinlejko vendor/composer/autoload_classmap.php || echo "NO 'Martinlejko' CLASSMAP ENTRIES"
-          echo "### Recursive list of backend/src directory ###"
-          ls -R src/
-          echo "### Check existence and permissions of specific problem files ###"
-          ls -l src/Controllers/BadgeController.php || echo "BadgeController.php NOT FOUND or ls failed"
-          ls -l src/Services/ProjectService.php || echo "ProjectService.php NOT FOUND or ls failed"
-          ls -l src/Services/MonitorService.php || echo "MonitorService.php NOT FOUND or ls failed"
-          ls -l src/Services/MonitoringService.php || echo "MonitoringService.php NOT FOUND or ls failed"
-          echo "### PHP Test: BadgeController ###"
-          php -r '$file = "src/Controllers/BadgeController.php"; if (file_exists($file)) { echo "PHP sees $file. Including it.\n"; include_once $file; clearstatcache(); if(class_exists("Martinlejko\\Backend\\Controllers\\BadgeController", false)) { echo "Martinlejko\\Backend\\Controllers\\BadgeController IS loadable by PHP.\n"; } else { echo "Martinlejko\\Backend\\Controllers\\BadgeController IS NOT loadable by PHP even after direct include. Included files:\n"; print_r(get_included_files()); } } else { echo "PHP does NOT see $file.\n"; }'
-          echo "### PHP Test: MonitorService & findAll method ###"
-          php -r '$file = "src/Services/MonitorService.php"; if (file_exists($file)) { echo "PHP sees $file. Including it.\n"; include_once $file; clearstatcache(); if(class_exists("Martinlejko\\Backend\\Services\\MonitorService", false)) { echo "Martinlejko\\Backend\\Services\\MonitorService IS loadable by PHP.\n"; if(method_exists("Martinlejko\\Backend\\Services\\MonitorService", "findAll")) {  echo "MonitorService::findAll() IS found.\n"; } else { echo "MonitorService::findAll() IS NOT found. Methods available in Martinlejko\\Backend\\Services\\MonitorService:\n"; print_r(get_class_methods("Martinlejko\\Backend\\Services\\MonitorService")); } } else { echo "Martinlejko\\Backend\\Services\\MonitorService IS NOT loadable by PHP even after direct include. Included files:\n"; print_r(get_included_files()); } } else { echo "PHP does NOT see $file.\n"; }'
       - name: Create .env file
         run: cp .env.example .env
       - name: Run backend tests
-        run: php -dzend_extension=xdebug.so vendor/bin/phpunit --testdox -vvv
+        run: php test
 
   backend-lint-format:
     name: Backend Lint & Format

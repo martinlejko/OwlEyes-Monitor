@@ -28,7 +28,6 @@ class MonitorService
                 ->setMaxResults($limit)
                 ->setFirstResult($offset);
 
-            // Apply filters
             if ($projectId !== null) {
                 $queryBuilder->andWhere('m.project_id = :projectId')
                     ->setParameter('projectId', $projectId);
@@ -44,7 +43,6 @@ class MonitorService
                     ->setParameter('type', $typeFilter);
             }
 
-            // Filter by latest status - this requires a join
             if ($statusFilter !== null) {
                 $queryBuilder->leftJoin(
                     'm',
@@ -68,7 +66,6 @@ class MonitorService
 
             $monitors = [];
             foreach ($results as $row) {
-                // Convert database column names to camelCase for our model
                 $data = [
                     'id'          => $row['id'],
                     'projectId'   => $row['project_id'],
@@ -78,7 +75,6 @@ class MonitorService
                     'badgeLabel'  => $row['badge_label']
                 ];
 
-                // Add type-specific fields
                 if ($row['type'] === 'ping') {
                     $data['host'] = $row['host'];
                     $data['port'] = $row['port'];
@@ -113,7 +109,6 @@ class MonitorService
                 return null;
             }
 
-            // Convert database column names to camelCase for our model
             $data = [
                 'id'          => $result['id'],
                 'projectId'   => $result['project_id'],
@@ -123,7 +118,6 @@ class MonitorService
                 'badgeLabel'  => $result['badge_label']
             ];
 
-            // Add type-specific fields
             if ($result['type'] === 'ping') {
                 $data['host'] = $result['host'];
                 $data['port'] = $result['port'];
@@ -143,7 +137,6 @@ class MonitorService
     public function create(Monitor $monitor): Monitor
     {
         try {
-            // Start with base data
             $data = [
                 'project_id'  => $monitor->getProjectId(),
                 'label'       => $monitor->getLabel(),
@@ -152,7 +145,6 @@ class MonitorService
                 'badge_label' => $monitor->getBadgeLabel()
             ];
 
-            // Add type-specific fields
             if ($monitor->getType() === 'ping') {
                 $data['host']         = $monitor->getHost();
                 $data['port']         = $monitor->getPort();
@@ -184,7 +176,6 @@ class MonitorService
     public function update(Monitor $monitor): bool
     {
         try {
-            // Start with base data
             $baseData = [
                 'project_id'  => $monitor->getProjectId(),
                 'label'       => $monitor->getLabel(),
@@ -250,7 +241,6 @@ class MonitorService
                 ->select('COUNT(*)')
                 ->from('monitors', 'm');
 
-            // Apply filters
             if ($projectId !== null) {
                 $queryBuilder->andWhere('m.project_id = :projectId')
                     ->setParameter('projectId', $projectId);
@@ -266,7 +256,6 @@ class MonitorService
                     ->setParameter('type', $typeFilter);
             }
 
-            // Filter by latest status
             if ($statusFilter !== null) {
                 $queryBuilder->leftJoin(
                     'm',

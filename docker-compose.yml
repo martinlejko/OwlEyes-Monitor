@@ -23,8 +23,8 @@ services:
   # Backend service configuration
   backend:
     build:
-      context: ./backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
     container_name: owleyes-backend
     restart: unless-stopped
     depends_on:
@@ -45,8 +45,8 @@ services:
   # Monitoring Service
   monitoring:
     build:
-      context: ./backend
-      dockerfile: ../docker/monitoring/Dockerfile
+      context: .
+      dockerfile: ./docker/monitoring/Dockerfile
     container_name: owleyes-monitoring
     restart: unless-stopped
     depends_on:

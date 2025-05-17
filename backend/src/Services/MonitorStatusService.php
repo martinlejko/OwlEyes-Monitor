@@ -31,7 +31,6 @@ class MonitorStatusService
                 ->setMaxResults($limit)
                 ->setFirstResult($offset);
 
-            // Apply date filters
             if ($fromDate) {
                 $queryBuilder->andWhere('start_time >= :fromDate')
                     ->setParameter('fromDate', $fromDate->format('Y-m-d H:i:s'));
@@ -42,7 +41,6 @@ class MonitorStatusService
                     ->setParameter('toDate', $toDate->format('Y-m-d H:i:s'));
             }
 
-            // Apply status filter
             if ($statusFilter !== null) {
                 $queryBuilder->andWhere('status = :status')
                     ->setParameter('status', $statusFilter ? 1 : 0);
@@ -126,21 +124,18 @@ class MonitorStatusService
     public function getDailyStatusSummary(int $monitorId, \DateTime $startDate, \DateTime $endDate): array
     {
         try {
-            // Get raw status data
             $queryBuilder = $this->db->createQueryBuilder()
                 ->select('*')
                 ->from('monitor_status')
                 ->where('monitor_id = :monitorId')
                 ->setParameter('monitorId', $monitorId)
                 ->orderBy('start_time', 'DESC')
-                ->setMaxResults(1000); // Get up to 1000 recent records
+                ->setMaxResults(1000);
 
             $results = $queryBuilder->executeQuery()->fetchAllAssociative();
 
-            // Group by day
             $dayData = [];
             foreach ($results as $row) {
-                // Extract date part only
                 $dateTime = new \DateTime($row['start_time']);
                 $dateStr  = $dateTime->format('Y-m-d');
 
@@ -153,19 +148,17 @@ class MonitorStatusService
 
                 $dayData[$dateStr]['total']++;
 
-                // Count failed checks (status = 0 means failed)
                 if ((int)$row['status'] === 0) {
                     $dayData[$dateStr]['failed']++;
                 }
             }
 
-            // Convert to CalendarDataPoint format
             $result = [];
             foreach ($dayData as $date => $counts) {
                 $total  = $counts['total'];
                 $failed = $counts['failed'];
 
-                $status = 'success'; // default
+                $status = 'success';
                 if ($total > 0) {
                     $failurePercent = ($failed / $total) * 100;
                     if ($failurePercent > 5) {
@@ -201,7 +194,6 @@ class MonitorStatusService
                 ->orderBy('start_time', 'DESC')
                 ->setMaxResults($limit);
 
-            // Apply date filters
             if ($fromDate) {
                 $queryBuilder->andWhere('start_time >= :fromDate')
                     ->setParameter('fromDate', $fromDate->format('Y-m-d H:i:s'));
@@ -214,7 +206,6 @@ class MonitorStatusService
 
             $results = $queryBuilder->executeQuery()->fetchAllAssociative();
 
-            // Reverse the array to get chronological order
             return array_map(function ($row) {
                 return [
                     'time'         => $row['start_time'],
@@ -236,7 +227,6 @@ class MonitorStatusService
                 ->where('monitor_id = :monitorId')
                 ->setParameter('monitorId', $monitorId);
 
-            // Apply date filters
             if ($fromDate) {
                 $queryBuilder->andWhere('start_time >= :fromDate')
                     ->setParameter('fromDate', $fromDate->format('Y-m-d H:i:s'));
@@ -247,7 +237,6 @@ class MonitorStatusService
                     ->setParameter('toDate', $toDate->format('Y-m-d H:i:s'));
             }
 
-            // Apply status filter
             if ($statusFilter !== null) {
                 $queryBuilder->andWhere('status = :status')
                     ->setParameter('status', $statusFilter ? 1 : 0);

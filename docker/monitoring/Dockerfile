@@ -24,7 +24,7 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath intl
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy application files
-COPY . /app
+COPY ./backend/. /app/
 
 # Set permissions
 RUN mkdir -p /app/logs

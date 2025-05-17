@@ -39,15 +39,26 @@ jobs:
         with:
           php-version: '8.2'
       - name: Clear Composer cache
-        run: composer clear-cache
+        run: composer clear-cache -vvv
       - name: Remove vendor directory
         run: rm -rf vendor
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader -vvv
+      - name: Show Composer autoload files
+        run: |
+          composer show -i
+          echo "--- AUTOLOAD_PSR4 ---"
+          cat vendor/composer/autoload_psr4.php
+          echo "--- AUTOLOAD_CLASSMAP ---"
+          cat vendor/composer/autoload_classmap.php || echo "autoload_classmap.php not found"
+          echo "--- AUTOLOAD_STATIC ---"
+          ls -l vendor/composer/
+          grep Martinlejko vendor/composer/autoload_psr4.php
+          grep Martinlejko vendor/composer/autoload_classmap.php || echo "Martinlejko not in classmap"
       - name: Create .env file
         run: cp .env.example .env
       - name: Run backend tests
-        run: composer test
+        run: php -dzend_extension=xdebug.so vendor/bin/phpunit --testdox -vvv
 
   backend-lint-format:
     name: Backend Lint & Format

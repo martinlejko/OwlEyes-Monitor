@@ -14,7 +14,6 @@ import {
   Container,
   Paper,
   Stack,
-  Chip,
   Tooltip,
 } from '@mui/material';
 import {

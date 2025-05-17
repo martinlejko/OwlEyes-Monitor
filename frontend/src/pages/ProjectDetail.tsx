@@ -18,8 +18,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Switch,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -37,7 +35,6 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
 import {
   getProject,

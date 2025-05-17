@@ -225,7 +225,6 @@ const MonitorDetail: React.FC = () => {
       const capturedDateFrom = dateFrom;
       const capturedDateTo = dateTo;
       const capturedPage = page;
-      const capturedRowsPerPage = rowsPerPage;
 
       console.log('Auto-refresh with preserved filters:', {
         tabValue: capturedTabValue,

@@ -27,7 +27,7 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { createMonitor, getProjects } from '../services/api';
-import { Project, Monitor, PingMonitor, WebsiteMonitor } from '../types';
+import { Project, PingMonitor, WebsiteMonitor } from '../types';
 
 const Grid = MuiGrid as any; // Temporary type assertion to fix the issue
 

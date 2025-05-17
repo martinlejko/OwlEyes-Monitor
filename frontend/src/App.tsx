@@ -1,13 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import {
-  ThemeProvider,
-  createTheme,
-  CssBaseline,
-  CircularProgress,
-  Box,
-  Typography,
-} from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, CircularProgress, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import Layout from './components/Layout'; // Assuming Layout handles Navbar and Footer
@@ -22,18 +15,6 @@ const MonitorsPage = lazy(() => import('./pages/Monitors'));
 const CreateProject = lazy(() => import('./pages/CreateProject'));
 const CreateMonitor = lazy(() => import('./pages/CreateMonitor'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
-
-// Placeholder for new/detail pages that are not yet implemented
-const NotImplemented: React.FC<{ title: string }> = ({ title }) => (
-  <Box sx={{ textAlign: 'center', mt: 4, p: 3 }}>
-    <Typography variant="h5" gutterBottom>
-      {title}
-    </Typography>
-    <Typography color="text.secondary">
-      This page is currently under construction. Please check back later!
-    </Typography>
-  </Box>
-);
 
 // Create a QueryClient
 const queryClient = new QueryClient({

@@ -1,4 +1,4 @@
-name: Lint and Format
+name: Actions
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   frontend:
-    name: Frontend Lint & Format
+    name: Lint and Format FE
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,7 +27,7 @@ jobs:
         run: npm run lint -- --fix
 
   backend-tests:
-    name: Backend Tests
+    name: BE tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,7 +50,7 @@ jobs:
         run: php -dzend_extension=xdebug.so vendor/bin/phpunit --testdox -vvv
 
   backend-lint-format:
-    name: Backend Lint & Format
+    name: Lint and Format BE
     runs-on: ubuntu-latest
     defaults:
       run:

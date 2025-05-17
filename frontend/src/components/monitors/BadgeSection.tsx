@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
-import { getBadgeUrl } from '../../services/api';
 
 interface BadgeSectionProps {
   monitorId: number;

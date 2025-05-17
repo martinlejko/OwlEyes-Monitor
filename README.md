@@ -13,16 +13,12 @@
 
 ## ✨ Overview
 
-OwlEyes is an elegant, self-hosted monitoring solution that keeps a vigilant eye on your websites and services. With an intuitive interface and powerful monitoring capabilities, OwlEyes helps you ensure maximum uptime and performance for your digital assets.
-
-<p align="center">
-  <img src="https://via.placeholder.com/800x400?text=OwlEyes+Dashboard" alt="OwlEyes Dashboard" width="80%"/>
-</p>
+OwlEyes is an elegant, self-hosted monitoring solution that keeps a vigilant eye on your websites and services. With an intuitive interface and powerful monitoring capabilities, OwlEyes helps you keep track of uptime and performance for your digital assets.
 
 ## ⚡ Key Features
 
 - 🔍 **Comprehensive Monitoring**
-  - 🌐 Website availability & content verification
+  - 🌐 Website availability
   - 🔄 TCP/Ping service checks
   - ⏱️ Response time tracking
 
@@ -38,40 +34,32 @@ OwlEyes is an elegant, self-hosted monitoring solution that keeps a vigilant eye
 
 - 🛠️ **Developer-Friendly**
   - 🔌 RESTful API for integration
-  - 🧩 GraphQL support for flexible queries
   - 🔖 Embeddable status badges for your documentation
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- 🐳 [Docker](https://www.docker.com/get-started) and Docker Compose
-- 🧰 Git
+- 🐳 [Docker](https://www.docker.com/get-started)
 
 ### Installation
 
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/martinlejko/OwlEyes.git
+git clone https://github.com/martinlejko/OwlEyes-Monitor.git
 cd OwlEyes
 ```
 
-2. **Create your environment configuration**
+2. **Create your environment configurations**
 
 ```bash
-cp .env.example .env
+cp postgres.env.example postgres.env
+cp backend/.env.example backend/.env
 # Edit .env with your preferred settings
 ```
 
-3. **Run the setup script**
-
-```bash
-chmod +x setup.sh
-./setup.sh
-```
-
-4. **Start the application**
+3. **Start the application**
 
 ```bash
 docker compose up -d
@@ -79,8 +67,8 @@ docker compose up -d
 
 5. **Access the application**
    - 🖥️ **Frontend**: [http://localhost:3000](http://localhost:3000)
-   - 🔌 **Backend API**: [http://localhost:8080](http://localhost:8080)
-   - 📚 **API Documentation**: [http://localhost:8080/docs](http://localhost:8080/docs)
+   - 🔌 **Backend API**: [http://localhost:8000](http://localhost:8000)
+   - 📚 **API Documentation**: [http://localhost:8000/api-docs](http://localhost:8000/docs)
 
 ## 📖 Usage Guide
 
@@ -129,51 +117,35 @@ OwlEyes follows a modern microservices architecture with containerized component
 
 ### Backend Stack
 
-- 🔧 **PHP 8.2** with Slim 4 Framework
-- 🗃️ **Doctrine ORM** for database access
-- 💾 **MySQL** database
+- 🔧 **PHP 8.0+** with Slim 4 Framework
+- 🗃️ **Doctrine DBAL** for database access
+- 💾 **Postgres** database
 - 📝 **Monolog** for logging
 - 🧩 **PHP-DI** for dependency injection
-- 🔌 **GraphQL** with webonyx/graphql-php
 
 ### Frontend Stack
 
-- ⚛️ **React 18** with React Router
+- ⚛️ **React 19** with React Router
 - 🎨 **Material UI** for responsive components
 - 📊 **Chart.js** for data visualization
-- 📅 **FullCalendar** for calendar view
 
 ### Infrastructure
 
 - 🐳 **Docker** and Docker Compose for containerization
-- 🌐 **Nginx** as web server
+- 🌐 **Apache** as web server
 
 ## 🧪 Development
 
 ### Backend Development
 
 ```bash
-# Start only backend services
-docker compose up -d backend db
-
-# Run PHP code style checks
-docker compose exec backend composer cs-check
-
-# Run tests
-docker compose exec backend composer test
+# Start all the services by
+docker compose up -d
 ```
 
-### Frontend Development
-
-```bash
-# Start frontend in development mode
-docker compose up -d frontend
-
-# Or run locally with npm
-cd frontend
-npm install
-npm run dev
-```
+This project utilizes GitHub Actions for continuous integration. As part of our CI pipeline:
+- Backend tests are automatically executed.
+- Linting and formatting checks are performed for both backend and frontend code to maintain code quality and consistency across the project.
 
 ## 🤝 Contributing
 
@@ -185,22 +157,34 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## 🤷 Troubleshooting
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Common issues when starting the application with Docker:
 
-## 🙏 Acknowledgements
+### Missing Environment Files
 
-- [Slim Framework](https://www.slimframework.com/) - PHP micro framework
-- [Doctrine ORM](https://www.doctrine-project.org/) - Object-relational mapper
-- [React](https://reactjs.org/) - Frontend library
-- [Material UI](https://mui.com/) - React component library
-- [Vite](https://vitejs.dev/) - Frontend build tool
+Before running `docker compose up -d`, ensure you have created the necessary environment configuration files from their examples:
+
+1.  **PostgreSQL Configuration**:
+    Copy the example file:
+    ```bash
+    cp postgres.env.example postgres.env
+    ```
+    Then, review and customize `postgres.env` if needed (e.g., if you changed default PostgreSQL credentials).
+
+2.  **Backend Configuration**:
+    Copy the example file:
+    ```bash
+    cp backend/.env.example backend/.env
+    ```
+    Then, review and customize `backend/.env` with your preferred settings (e.g., database connection details to match `postgres.env`, API keys, application settings).
+
+After confirming these files are correctly in place and configured, try running `docker compose up -d` again. If you encounter further issues, do not hesitate and contact us 📞. 
 
 ---
 
 <div align="center">
 
-Made with ❤️ by [Martin Lejko](https://github.com/martinlejko)
+Made with by [Martin Lejko](https://github.com/martinlejko) and [Matus Klecka](https://github.com/tukan74)
 
 </div>

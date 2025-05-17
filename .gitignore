@@ -49,5 +49,5 @@ backend/.phpunit.result.cache
 # Docker
 docker-compose.override.yml
 
-# GitHub Actions
--.github/workflows/ 
+# PHP CS Fixer cache
+.php-cs-fixer.cache 

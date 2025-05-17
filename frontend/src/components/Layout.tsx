@@ -13,9 +13,6 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  useMediaQuery,
-  useTheme,
-  Button,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -32,8 +29,6 @@ interface LayoutProps {
 const drawerWidth = 240;
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();

@@ -3,7 +3,6 @@ import { Box, Typography, Chip, Button, Card, CardContent } from '@mui/material'
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  QueryStats as QueryStatsIcon,
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { Monitor } from '../../types';

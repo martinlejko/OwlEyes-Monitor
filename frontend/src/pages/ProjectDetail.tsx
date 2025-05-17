@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -18,8 +18,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Switch,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -37,7 +35,6 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Save as SaveIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
 import {
   getProject,
@@ -52,7 +49,6 @@ const Grid = MuiGrid as any;
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +146,7 @@ const ProjectDetail: React.FC = () => {
       setError('Failed to load project details. Please try again later.');
       setLoading(false);
     }
-  }, [id, location.search, debouncedLabelFilter, typeFilter, statusFilter]);
+  }, [id, debouncedLabelFilter, typeFilter, statusFilter]);
 
   useEffect(() => {
     fetchData();

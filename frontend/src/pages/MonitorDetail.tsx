@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, LinearProgress, Alert, Button, Paper, Tab, Tabs } from '@mui/material';
 import {
@@ -59,7 +59,7 @@ const MonitorDetail: React.FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchMonitor = async () => {
+  const fetchMonitor = useCallback(async () => {
     try {
       if (!id) return;
 
@@ -69,165 +69,298 @@ const MonitorDetail: React.FC = () => {
       console.error('Error fetching monitor:', err);
       setError(err.message || 'Failed to load monitor details');
     }
-  };
+  }, [id]);
 
-  const fetchStatusData = async (viewMode = tabValue) => {
-    try {
-      if (!id) return;
+  const fetchStatusData = useCallback(
+    async (viewMode = tabValue) => {
+      // Set a loading indicator but with a slight delay to avoid flicker on fast responses
+      const loadingTimer = setTimeout(() => {
+        if (!fetchInProgressRef.current) return; // If request already finished, don't show loading
+        setLoading(true);
+      }, 300);
 
-      const monitorId = parseInt(id);
-      let from: Date | undefined = undefined;
-      let to: Date | undefined = undefined;
-      let statusFilterValue: boolean | undefined = undefined;
-
-      if (viewMode === 0) {
-        if (dateFrom) {
-          from = new Date(dateFrom);
+      try {
+        if (!id) {
+          clearTimeout(loadingTimer);
+          return;
         }
 
-        if (dateTo) {
-          to = new Date(dateTo);
-          to.setHours(23, 59, 59, 999);
+        // Mark fetch in progress
+        fetchInProgressRef.current = true;
+
+        const monitorId = parseInt(id);
+        let from: Date | undefined = undefined;
+        let to: Date | undefined = undefined;
+        let statusFilterValue: boolean | undefined = undefined;
+
+        // Handle filters - only apply for list view
+        if (viewMode === 0) {
+          if (dateFrom) {
+            from = new Date(dateFrom);
+          }
+
+          if (dateTo) {
+            to = new Date(dateTo);
+            // Set time to end of day
+            to.setHours(23, 59, 59, 999);
+          }
+
+          if (statusFilter === 'up') {
+            statusFilterValue = true;
+          } else if (statusFilter === 'down') {
+            statusFilterValue = false;
+          }
         }
 
-        if (statusFilter === 'up') {
-          statusFilterValue = true;
-        } else if (statusFilter === 'down') {
-          statusFilterValue = false;
+        console.log(
+          `Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`,
+        );
+
+        // Fetch data based on view mode - preserving the current state
+        const currentViewMode = viewMode; // Ensure we use the passed viewMode
+
+        if (currentViewMode === 0) {
+          // List view
+          const response = await getMonitorStatuses(
+            monitorId,
+            page + 1,
+            rowsPerPage,
+            from,
+            to,
+            statusFilterValue,
+            'list',
+          );
+
+          // Type assertion since we know the structure based on view
+          const listResponse = response as PaginatedResponse<MonitorStatus>;
+          setStatuses(listResponse.data);
+          setTotalStatusCount(listResponse.meta.total);
+        } else if (currentViewMode === 1) {
+          // Calendar view
+          // For calendar view, always use a fixed 3-month range and don't apply filters
+          const fromDate = startOfMonth(subMonths(new Date(), 2)); // From start of 2 months ago
+          const toDate = new Date(); // To today
+
+          const response = await getMonitorStatuses(
+            monitorId,
+            1,
+            1000, // Large enough to ensure we get all needed data
+            fromDate,
+            toDate,
+            undefined, // Don't use status filter for calendar view
+            'calendar',
+          );
+
+          // Type assertion
+          const calendarResponse = response as { data: CalendarDataPoint[] };
+          setCalendarData(calendarResponse.data);
+        } else if (currentViewMode === 2) {
+          // Graph view
+          // For graph view, always use a fixed 1-month range and don't apply filters
+          const fromDate = subMonths(new Date(), 1);
+          const toDate = new Date();
+
+          const response = await getMonitorStatuses(
+            monitorId,
+            1,
+            100,
+            fromDate,
+            toDate,
+            undefined, // Don't use status filter for graph view
+            'graph',
+          );
+
+          // Type assertion
+          const graphResponse = response as { data: GraphDataPoint[] };
+          setGraphData(graphResponse.data);
         }
+
+        // Log successful completion with preserved filter values
+        console.log('Status data fetch complete with preserved filters:', {
+          viewMode: currentViewMode,
+          statusFilter,
+          dateFrom,
+          dateTo,
+          page,
+        });
+
+        // Clear the loading timer
+        clearTimeout(loadingTimer);
+
+        // Ensure the loading indicator stays visible long enough to be meaningful
+        // This prevents the progress bar from disappearing too quickly
+        setTimeout(() => {
+          setLoading(false);
+
+          // Give a small delay before allowing new fetches to ensure loading animation completes
+          setTimeout(() => {
+            fetchInProgressRef.current = false;
+          }, 800);
+        }, 500);
+      } catch (err: any) {
+        console.error('Error fetching status data:', err);
+        setError(err.message || 'Failed to load status data');
+
+        // Clear the loading timer
+        clearTimeout(loadingTimer);
+
+        // Complete loading with a slight delay
+        setTimeout(() => {
+          setLoading(false);
+          fetchInProgressRef.current = false;
+        }, 500);
       }
+    },
+    [id, dateFrom, dateTo, page, rowsPerPage, statusFilter, tabValue],
+  );
 
-      console.log(
-        `Fetching data with viewMode: ${viewMode}, statusFilter: ${statusFilter}, dateFrom: ${dateFrom}, dateTo: ${dateTo}, page: ${page}`,
-      );
-
-      const currentViewMode = viewMode; 
-
-      if (currentViewMode === 0) {
-        const response = await getMonitorStatuses(
-          monitorId,
-          page + 1,
-          rowsPerPage,
-          from,
-          to,
-          statusFilterValue,
-          'list',
-        );
-
-        const listResponse = response as PaginatedResponse<MonitorStatus>;
-        setStatuses(listResponse.data);
-        setTotalStatusCount(listResponse.meta.total);
-      } else if (currentViewMode === 1) {
-        const fromDate = startOfMonth(subMonths(new Date(), 2));
-        const toDate = new Date();
-
-        const response = await getMonitorStatuses(
-          monitorId,
-          1,
-          1000, 
-          fromDate,
-          toDate,
-          undefined, 
-          'calendar',
-        );
-
-        const calendarResponse = response as { data: CalendarDataPoint[] };
-        setCalendarData(calendarResponse.data);
-      } else if (currentViewMode === 2) {
-        const fromDate = subMonths(new Date(), 1);
-        const toDate = new Date();
-
-        const response = await getMonitorStatuses(
-          monitorId,
-          1,
-          100,
-          fromDate,
-          toDate,
-          undefined,
-          'graph',
-        );
-
-        const graphResponse = response as { data: GraphDataPoint[] };
-        setGraphData(graphResponse.data);
-      }
-
-      setLoading(false);
-
-      console.log('Status data fetch complete with preserved filters:', {
-        viewMode: currentViewMode,
-        statusFilter,
-        dateFrom,
-        dateTo,
-        page,
-      });
-    } catch (err: any) {
-      console.error('Error fetching status data:', err);
-      setError(err.message || 'Failed to load status data');
-      setLoading(false);
-    }
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async () => {
+    // Don't set loading immediately to avoid flickering
+    fetchInProgressRef.current = true;
     setError(null);
 
-    await fetchMonitor();
+    // Use a delayed loading indicator to avoid flickering on fast loads
+    const loadingTimer = setTimeout(() => {
+      // Only show loading if the request is still in progress
+      if (fetchInProgressRef.current) {
+        setLoading(true);
+      }
+    }, 300);
 
-    const currentTabValue = tabValue;
-    console.log('Initial data fetch with preserved filters:', {
-      tabValue: currentTabValue,
-      statusFilter,
-      dateFrom,
-      dateTo,
-      page,
-    });
+    try {
+      // First fetch the monitor data
+      await fetchMonitor();
 
-    await fetchStatusData(currentTabValue);
-  };
+      // Then fetch status data with current filters preserved
+      const currentTabValue = tabValue;
+      console.log('Initial data fetch for tab:', { tabValue: currentTabValue });
 
+      await fetchStatusData(currentTabValue);
+    } catch (error) {
+      console.error('Error during initial data fetch:', error);
+      setError('Failed to load monitor data. Please try refreshing the page.');
+    } finally {
+      // Clear the loading timer
+      clearTimeout(loadingTimer);
+
+      // Ensure the loading state completes in a user-friendly way
+      setTimeout(() => {
+        setLoading(false);
+
+        // Allow a small delay before new fetches
+        setTimeout(() => {
+          fetchInProgressRef.current = false;
+        }, 500);
+      }, 500);
+    }
+  }, [fetchMonitor, fetchStatusData, tabValue]);
+
+  // Track if a request is in progress to prevent overlapping fetches
+  const fetchInProgressRef = useRef(false);
+
+  // Initialize data
   useEffect(() => {
+    // Initial data load
     fetchData();
 
+    // Set up live updates with a much longer interval to avoid jitter
     updateIntervalRef.current = setInterval(() => {
-      fetchMonitor();
+      // Skip if a request is already in progress
+      if (fetchInProgressRef.current) {
+        console.log('Skipping auto-refresh because a request is already in progress');
+        return;
+      }
 
-      const capturedTabValue = tabValue;
-      const capturedStatusFilter = statusFilter;
-      const capturedDateFrom = dateFrom;
-      const capturedDateTo = dateTo;
-      const capturedPage = page;
-      const capturedRowsPerPage = rowsPerPage;
+      // Set the in-progress flag
+      fetchInProgressRef.current = true;
 
-      console.log('Auto-refresh with preserved filters:', {
-        tabValue: capturedTabValue,
-        statusFilter: capturedStatusFilter,
-        dateFrom: capturedDateFrom,
-        dateTo: capturedDateTo,
-        page: capturedPage,
-      });
+      // Check if this monitor has a fast refresh rate that requires more frequent updates
+      const hasFastRefreshRate = monitor && monitor.periodicity <= 5;
 
-      fetchStatusData(capturedTabValue);
-    }, 5000);
+      // For fast-refresh monitors, we need to update more frequently
+      // For others, only do full refreshes periodically to reduce UI jitter
+      const shouldRefreshAll = hasFastRefreshRate || Date.now() % 15000 < 5000;
+
+      if (shouldRefreshAll) {
+        console.log('Performing full data refresh...');
+
+        // Capture current filter values
+        const capturedTabValue = tabValue;
+
+        // Start with just fetching monitor metadata
+        fetchMonitor()
+          .then(() => {
+            // Then fetch status data
+            return fetchStatusData(capturedTabValue);
+          })
+          .catch((error) => {
+            console.error('Error during auto-refresh:', error);
+          })
+          .finally(() => {
+            // Reset the in-progress flag
+            setTimeout(() => {
+              fetchInProgressRef.current = false;
+            }, 1000); // Add a small delay to ensure loading animation completes
+          });
+      } else {
+        // Just update the monitor metadata for most refreshes
+        console.log('Performing metadata-only refresh...');
+        fetchMonitor().finally(() => {
+          // Reset the in-progress flag
+          setTimeout(() => {
+            fetchInProgressRef.current = false;
+          }, 1000);
+        });
+      }
+    }, 5000); // Update every 5 seconds to match fast monitors
 
     return () => {
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current);
       }
     };
-  }, [id]);
+  }, [fetchData, fetchMonitor, fetchStatusData, tabValue, monitor]);
 
+  // Use a ref to track initial render and avoid jittery UI
+  const isInitialRender = useRef(true);
+  const previousFiltersRef = useRef({ tabValue, statusFilter, dateFrom, dateTo, page });
+
+  // Fetch data when filters or pagination change - optimized to avoid jitter
   useEffect(() => {
-    if (!loading && monitor) {
-      console.log('Filter changed, refreshing data with:', {
-        tabValue,
-        statusFilter,
-        dateFrom,
-        dateTo,
-        page,
-      });
-      fetchStatusData(tabValue);
+    // Skip the first render as fetchData will handle it
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
     }
-  }, [page, rowsPerPage, statusFilter, dateFrom, dateTo, tabValue, monitor]);
+
+    // Skip if monitor isn't loaded yet
+    if (!loading && monitor) {
+      const prevFilters = previousFiltersRef.current;
+
+      // Only refresh if the filter values have actually changed
+      if (
+        prevFilters.tabValue !== tabValue ||
+        prevFilters.statusFilter !== statusFilter ||
+        prevFilters.dateFrom !== dateFrom ||
+        prevFilters.dateTo !== dateTo ||
+        prevFilters.page !== page
+      ) {
+        console.log('Filters changed, refreshing data with:', {
+          tabValue,
+          statusFilter,
+          dateFrom,
+          dateTo,
+          page,
+        });
+
+        // Update what we consider the previous values
+        previousFiltersRef.current = { tabValue, statusFilter, dateFrom, dateTo, page };
+
+        // Fetch the data with current values
+        fetchStatusData(tabValue);
+      }
+    }
+  }, [fetchStatusData, loading, monitor, tabValue, statusFilter, dateFrom, dateTo, page]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -258,28 +391,28 @@ const MonitorDetail: React.FC = () => {
   };
 
   const handleRefresh = async () => {
+    // If a fetch is already in progress, don't start another one
+    if (fetchInProgressRef.current) {
+      console.log('Skipping manual refresh because a request is already in progress');
+      return;
+    }
+
+    // Set refreshing state to true to show loading indicator
     setRefreshing(true);
 
     const currentTabValue = tabValue;
-    const currentStatusFilter = statusFilter;
-    const currentDateFrom = dateFrom;
-    const currentDateTo = dateTo;
 
-    console.log('Manual refresh with filters:', {
-      tabValue: currentTabValue,
-      statusFilter: currentStatusFilter,
-      dateFrom: currentDateFrom,
-      dateTo: currentDateTo,
-    });
+    console.log('Manual refresh with current tab:', { tabValue: currentTabValue });
 
     try {
       await fetchStatusData(currentTabValue);
     } catch (error) {
       console.error('Error during manual refresh:', error);
     } finally {
+      // Reset refreshing state after a meaningful delay to ensure loading indicator completes
       setTimeout(() => {
         setRefreshing(false);
-      }, 500);
+      }, 1000);
     }
   };
 

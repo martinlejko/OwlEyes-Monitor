@@ -48,8 +48,8 @@ DECLARE
     v_business_hours_multiplier FLOAT;
     v_maintenance_window BOOLEAN;
 BEGIN
-    -- Set fixed current timestamp to May 6, 2024 (for consistent data generation)
-    v_end_date := '2024-05-06 23:59:59'::TIMESTAMP;
+    -- Set fixed current timestamp to May 6, 2025 (for consistent data generation)
+    v_end_date := '2025-05-06 23:59:59'::TIMESTAMP;
     v_start_date := v_end_date - INTERVAL '1 month';
     
     -- For each monitor
@@ -124,7 +124,7 @@ UPDATE monitor_status
 SET status = false, 
     response_time = 3000
 WHERE monitor_id IN (2, 6) -- GitHub API and Status page
-AND start_time BETWEEN '2024-05-01 10:00:00' AND '2024-05-01 13:00:00';
+AND start_time BETWEEN '2025-05-01 10:00:00' AND '2025-05-01 13:00:00';
 
 -- YouTube weekend peak hours pattern (higher response times)
 UPDATE monitor_status 

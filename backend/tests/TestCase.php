@@ -2,14 +2,12 @@
 
 namespace Tests;
 
-use DI\Container;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Rule\AnyInvokedCount;
 use PHPUnit\Framework\MockObject\Rule\InvokedCount;
 use PHPUnit\Framework\TestCase as BaseTestCase;
-use Slim\App;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -20,15 +18,12 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // Load environment variables
         $dotenv = \Dotenv\Dotenv::createImmutable(dirname(__DIR__));
         $dotenv->safeLoad();
 
-        // Create app
         $this->app       = require dirname(__DIR__) . '/src/app.php';
         $this->container = $this->app->getContainer();
 
-        // Override logger to prevent output during tests
         $this->container->set('logger', function () {
             $logger = new Logger('test');
             $logger->pushHandler(new NullHandler());
@@ -36,7 +31,6 @@ abstract class TestCase extends BaseTestCase
             return $logger;
         });
 
-        // Set up mock database connection if needed for unit tests
         if ($this->shouldUseMockDb()) {
             $this->setupMockDb();
         }
@@ -44,12 +38,11 @@ abstract class TestCase extends BaseTestCase
 
     protected function shouldUseMockDb(): bool
     {
-        return false; // Override in subclasses if needed
+        return false;
     }
 
     protected function setupMockDb(): void
     {
-        // Create a mock database connection that can be overridden in tests
         $this->container->set('db', function () {
             return $this->getMockBuilder(\Doctrine\DBAL\Connection::class)
                         ->disableOriginalConstructor()
@@ -57,12 +50,6 @@ abstract class TestCase extends BaseTestCase
         });
     }
 
-    /**
-     * Helper method to create a mock of a specified class
-     *
-     * @param string $className The class to mock
-     * @return MockObject The mocked object
-     */
     protected function createMock(string $className): MockObject
     {
         return $this->getMockBuilder($className)
@@ -70,14 +57,6 @@ abstract class TestCase extends BaseTestCase
                     ->getMock();
     }
 
-    /**
-     * Create a service with mocked database connection
-     *
-     * @param string $serviceClass The service class to create
-     * @param mixed $mockDb The mock database connection, or null to create one
-     * @param mixed $logger The logger, or null to use the container logger
-     * @return object The service instance
-     */
     protected function createServiceWithMockDb($serviceClass, $mockDb = null, $logger = null)
     {
         if ($mockDb === null) {
@@ -93,43 +72,26 @@ abstract class TestCase extends BaseTestCase
         return new $serviceClass($mockDb, $logger);
     }
 
-    /**
-     * Helper method for string contains constraint
-     */
     public static function stringContains(string $string, bool $ignoreCase = false): \PHPUnit\Framework\Constraint\StringContains
     {
-        // The StringContains constraint takes $string as the first parameter (the needle)
-        // and $ignoreCase as the second.
         return new \PHPUnit\Framework\Constraint\StringContains($string, $ignoreCase);
     }
 
-    /**
-     * Helper to check if things are equal
-     */
     public static function equalTo(mixed $value): \PHPUnit\Framework\Constraint\IsEqual
     {
         return parent::equalTo($value);
     }
 
-    /**
-     * Helper for asserting a specific number of calls
-     */
     public static function exactly(int $count): InvokedCount
     {
         return parent::exactly($count);
     }
 
-    /**
-     * Helper method for the any constraint
-     */
     public static function any(): AnyInvokedCount
     {
         return parent::any();
     }
 
-    /**
-     * Helper method for the once constraint
-     */
     public static function once(): InvokedCount
     {
         return parent::once();

@@ -14,7 +14,6 @@ class ApiEndpointsTest extends ApiTest
         $this->assertArrayHasKey('data', $response['body']);
         $this->assertGreaterThan(0, count($response['body']['data']));
 
-        // Check structure of the first project
         $firstProject = $response['body']['data'][0];
         $this->assertArrayHasKey('id', $firstProject);
         $this->assertArrayHasKey('label', $firstProject);
@@ -32,7 +31,6 @@ class ApiEndpointsTest extends ApiTest
         $this->assertArrayHasKey('data', $response['body']);
         $this->assertGreaterThan(0, count($response['body']['data']));
 
-        // Check structure of the first monitor
         $firstMonitor = $response['body']['data'][0];
         $this->assertArrayHasKey('id', $firstMonitor);
         $this->assertArrayHasKey('projectId', $firstMonitor);
@@ -67,14 +65,11 @@ class ApiEndpointsTest extends ApiTest
      */
     public function testDeleteMonitor($monitorId)
     {
-        // Delete the monitor
         $response = $this->callApi('DELETE', '/api/monitors/' . $monitorId);
         $this->assertEquals(204, $response['status']);
 
-        // Verify it's deleted by trying to fetch it
         $response = $this->callApi('GET', '/api/monitors/' . $monitorId);
 
-        // Should either return 404 or empty data
         if ($response['status'] === 200) {
             $this->assertEmpty($response['body']['data']);
         } else {

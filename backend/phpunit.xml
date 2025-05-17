@@ -7,9 +7,6 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Simple">
-            <file>./tests/SimpleTest.php</file>
-        </testsuite>
         <testsuite name="Api">
             <file>./tests/ApiTest.php</file>
         </testsuite>

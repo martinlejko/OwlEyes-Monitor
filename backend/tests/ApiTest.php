@@ -10,7 +10,6 @@ class ApiTest extends TestCase
 
     protected function setUp(): void
     {
-        // Check if the API is accessible
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $this->apiUrl);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -71,19 +70,16 @@ class ApiTest extends TestCase
         $this->assertArrayHasKey('data', $response['body']);
         $this->assertNotEmpty($response['body']['data']);
 
-        // Check structure of the first project
         $firstProject = $response['body']['data'][0];
         $this->assertArrayHasKey('id', $firstProject);
         $this->assertArrayHasKey('label', $firstProject);
         $this->assertArrayHasKey('description', $firstProject);
         $this->assertArrayHasKey('tags', $firstProject);
 
-        return $firstProject['id']; // Return ID for use in other tests
+        return $firstProject['id'];
     }
 
-    /**
-     * @depends testListProjects
-     */
+
     public function testGetProject($projectId)
     {
         $response = $this->callApi('GET', '/api/projects/' . $projectId);
@@ -107,15 +103,12 @@ class ApiTest extends TestCase
             $this->assertArrayHasKey('label', $firstMonitor);
             $this->assertArrayHasKey('type', $firstMonitor);
 
-            return $firstMonitor['id']; // Return ID for use in other tests
+            return $firstMonitor['id'];
         }
 
         $this->markTestSkipped('No monitors found to test with');
     }
 
-    /**
-     * @depends testListMonitors
-     */
     public function testGetMonitorStatus($monitorId)
     {
         if (!$monitorId) {

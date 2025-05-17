@@ -34,7 +34,6 @@ class ProjectServiceTest extends TestCase
 
     public function testGetProjects()
     {
-        // Sample data that should be returned from the database
         $expectedProjects = [
             [
                 'id' => 1,
@@ -50,7 +49,6 @@ class ProjectServiceTest extends TestCase
             ]
         ];
 
-        // Mock the query builder
         $mockQueryBuilder = $this->getMockBuilder(\Doctrine\DBAL\Query\QueryBuilder::class)
                                 ->disableOriginalConstructor()
                                 ->getMock();
@@ -60,7 +58,6 @@ class ProjectServiceTest extends TestCase
         $mockQueryBuilder->expects(self::any())->method('setMaxResults')->willReturnSelf();
         $mockQueryBuilder->expects(self::any())->method('setFirstResult')->willReturnSelf();
 
-        // Create a mock Result object
         $mockResult = $this->getMockBuilder(\Doctrine\DBAL\Result::class)
                           ->disableOriginalConstructor()
                           ->getMock();
@@ -72,15 +69,12 @@ class ProjectServiceTest extends TestCase
                         ->method('executeQuery')
                         ->willReturn($mockResult);
 
-        // Set up the mock DB to return our mock query builder
         $this->mockDb->expects(self::once())
                      ->method('createQueryBuilder')
                      ->willReturn($mockQueryBuilder);
 
-        // Call the method being tested
         $result = $this->projectService->findAll(1, 10);
 
-        // Verify the result contains the expected data
         self::assertCount(2, $result);
         self::assertInstanceOf(Project::class, $result[0]);
         self::assertEquals(1, $result[0]->getId());
@@ -92,12 +86,10 @@ class ProjectServiceTest extends TestCase
     {
         $project = new Project('New Project', 'A new test project', ['test', 'new']);
 
-        // Mock the connection to return 1 for lastInsertId
         $this->mockDb->expects(self::once())
                      ->method('lastInsertId')
                      ->willReturn('1');
 
-        // Expect insert to be called with the right table
         $this->mockDb->expects(self::once())
                      ->method('insert')
                      ->with(
@@ -110,10 +102,8 @@ class ProjectServiceTest extends TestCase
                      )
                      ->willReturn(1);
 
-        // Call the method being tested
         $result = $this->projectService->create($project);
 
-        // Verify the project is returned with an ID
         self::assertInstanceOf(Project::class, $result);
         self::assertEquals(1, $result->getId());
         self::assertEquals('New Project', $result->getLabel());

@@ -34,7 +34,6 @@ class MonitorServiceTest extends TestCase
 
     public function testFindAll()
     {
-        // Sample data that should be returned from the database
         $expectedMonitors = [
             [
                 'id' => 1,
@@ -64,7 +63,6 @@ class MonitorServiceTest extends TestCase
             ]
         ];
 
-        // Mock the query builder
         $mockQueryBuilder = $this->getMockBuilder(\Doctrine\DBAL\Query\QueryBuilder::class)
                                 ->disableOriginalConstructor()
                                 ->getMock();
@@ -74,7 +72,6 @@ class MonitorServiceTest extends TestCase
         $mockQueryBuilder->expects(self::any())->method('setMaxResults')->willReturnSelf();
         $mockQueryBuilder->expects(self::any())->method('setFirstResult')->willReturnSelf();
 
-        // Create a mock Result object
         $mockResult = $this->getMockBuilder(\Doctrine\DBAL\Result::class)
                           ->disableOriginalConstructor()
                           ->getMock();
@@ -86,15 +83,12 @@ class MonitorServiceTest extends TestCase
                         ->method('executeQuery')
                         ->willReturn($mockResult);
 
-        // Set up the mock DB to return our mock query builder
         $this->mockDb->expects(self::once())
                      ->method('createQueryBuilder')
                      ->willReturn($mockQueryBuilder);
 
-        // Call the method being tested
         $result = $this->monitorService->findAll(1, 10);
 
-        // Verify the result contains the expected data
         self::assertCount(2, $result);
         self::assertInstanceOf(Monitor::class, $result[0]);
         self::assertEquals(1, $result[0]->getId());
@@ -107,7 +101,6 @@ class MonitorServiceTest extends TestCase
     {
         $monitorId = 8;
 
-        // Expect delete to be called with the right table and condition
         $this->mockDb->expects(self::once())
                      ->method('delete')
                      ->with(
@@ -118,10 +111,8 @@ class MonitorServiceTest extends TestCase
                      )
                      ->willReturn(1);
 
-        // Call the method being tested
         $result = $this->monitorService->delete($monitorId);
 
-        // Verify the result is true
         self::assertTrue($result);
     }
 }

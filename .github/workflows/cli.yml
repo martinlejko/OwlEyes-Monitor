@@ -38,8 +38,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+      - name: Clear Composer cache
+        run: composer clear-cache
+      - name: Remove vendor directory
+        run: rm -rf vendor
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
       - name: Create .env file
         run: cp .env.example .env
       - name: Run backend tests
